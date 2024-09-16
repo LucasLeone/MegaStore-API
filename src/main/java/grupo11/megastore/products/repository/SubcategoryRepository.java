@@ -1,0 +1,13 @@
+package grupo11.megastore.products.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import grupo11.megastore.products.model.Subcategory;
+
+@Repository
+public interface SubcategoryRepository extends JpaRepository<Subcategory, Integer> {
+    List<Subcategory> findByStatus(int status);
+}
