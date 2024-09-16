@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "MegaStore",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
