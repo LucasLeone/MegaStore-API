@@ -50,4 +50,8 @@ public class CategoryService implements ICategoryService {
         category.markAsDeleted();
         categoryRepository.save(category);
     }
+
+    public boolean isNameExists(String name) {
+        return categoryRepository.findByName(name).isPresent();
+    }
 }

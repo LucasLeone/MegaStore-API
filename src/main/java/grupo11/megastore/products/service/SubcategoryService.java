@@ -50,4 +50,8 @@ public class SubcategoryService implements ISubcategoryService {
         subcategory.markAsDeleted();
         subcategoryRepository.save(subcategory);
     }
+
+    public boolean isNameExists(String name) {
+        return subcategoryRepository.findByName(name).isPresent();
+    }
 }

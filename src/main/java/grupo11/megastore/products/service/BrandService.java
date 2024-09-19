@@ -50,4 +50,8 @@ public class BrandService implements IBrandService {
         brand.markAsDeleted();
         brandRepository.save(brand);
     }
+
+    public boolean isNameExists(String name) {
+        return brandRepository.findByName(name).isPresent();
+    }
 }
