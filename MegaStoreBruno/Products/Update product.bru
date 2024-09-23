@@ -1,0 +1,17 @@
+meta {
+  name: Update product
+  type: http
+  seq: 4
+}
+
+patch {
+  url: http://localhost:8080/products/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "tesasdasdt"
+  }
+}

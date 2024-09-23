@@ -1,0 +1,18 @@
+meta {
+  name: Create subcategory
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/subcategories
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Test",
+    "description": "testasdasd"
+  }
+}
