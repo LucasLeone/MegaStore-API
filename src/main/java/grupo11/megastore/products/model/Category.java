@@ -1,17 +1,14 @@
 package grupo11.megastore.products.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.ToString;
+import java.util.Set;
 
 @Entity
 @Data
-@ToString
+@ToString(exclude = "subcategories")
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,7 +16,9 @@ public class Category {
 
     @Column(nullable = false, unique = true)
     private String name;
+    
     private String description;
+
     @NotNull
     private int status;
     public static final int ACTIVE = 0;
@@ -28,4 +27,7 @@ public class Category {
     public void markAsDeleted() {
         this.setStatus(DELETED);
     }
+
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Subcategory> subcategories;
 }

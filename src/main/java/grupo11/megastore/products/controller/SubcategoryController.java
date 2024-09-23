@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/subcategories")
 public class SubcategoryController {
@@ -35,7 +37,7 @@ public class SubcategoryController {
         Subcategory subcategory = subcategoryService.getById(id);
 
         if (subcategory == null) {
-            throw new ResourceNotFoundException("Subcategory with id " + id + " not found.");
+            throw new ResourceNotFoundException("Subcategoría con id " + id + " no encontrada.");
         }
 
         SubcategoryDTO subcategoryDTO = SubcategoryMapper.toDTO(subcategory);
@@ -43,29 +45,15 @@ public class SubcategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<SubcategoryDTO> save(@RequestBody SubcategoryDTO subcategoryDTO) {
-        Subcategory subcategory = SubcategoryMapper.toEntity(subcategoryDTO);
-        Subcategory savedSubcategory = subcategoryService.save(subcategory);
+    public ResponseEntity<SubcategoryDTO> save(@Valid @RequestBody SubcategoryDTO subcategoryDTO) {
+        Subcategory savedSubcategory = subcategoryService.save(subcategoryDTO);
         SubcategoryDTO savedSubcategoryDTO = SubcategoryMapper.toDTO(savedSubcategory);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedSubcategoryDTO);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<SubcategoryDTO> updatePartial(@PathVariable Integer id, @RequestBody SubcategoryDTO subcategoryDTO) {
-        Subcategory existingSubcategory = subcategoryService.getById(id);
-        if (existingSubcategory == null) {
-            throw new ResourceNotFoundException("Subcategory with id " + id + " not found.");
-        }
-
-        if (subcategoryDTO.getName() != null) {
-            existingSubcategory.setName(subcategoryDTO.getName());
-        }
-
-        if (subcategoryDTO.getDescription() != null) {
-            existingSubcategory.setDescription(subcategoryDTO.getDescription());
-        }
-
-        Subcategory updatedSubcategory = subcategoryService.update(existingSubcategory);
+        Subcategory updatedSubcategory = subcategoryService.update(id, subcategoryDTO);
         SubcategoryDTO updatedSubcategoryDTO = SubcategoryMapper.toDTO(updatedSubcategory);
         return ResponseEntity.ok(updatedSubcategoryDTO);
     }
@@ -74,7 +62,7 @@ public class SubcategoryController {
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         Subcategory subcategory = subcategoryService.getById(id);
         if (subcategory == null) {
-            throw new ResourceNotFoundException("Subcategory with id " + id + " not found.");
+            throw new ResourceNotFoundException("Subcategoría con id " + id + " no encontrada.");
         }
 
         subcategoryService.delete(id);

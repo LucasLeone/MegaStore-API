@@ -9,6 +9,7 @@ public class SubcategoryMapper {
         dto.setId(subcategory.getId());
         dto.setName(subcategory.getName());
         dto.setDescription(subcategory.getDescription());
+        dto.setCategoryId(subcategory.getCategory().getId());
         return dto;
     }
 
