@@ -1,7 +1,6 @@
 package grupo11.megastore.products.service;
 
 import grupo11.megastore.constant.EntityStatus;
-import grupo11.megastore.exception.ResourceNotFoundException;
 import grupo11.megastore.products.dto.brand.BrandDTO;
 import grupo11.megastore.products.dto.brand.CreateBrandDTO;
 import grupo11.megastore.products.dto.brand.UpdateBrandDTO;

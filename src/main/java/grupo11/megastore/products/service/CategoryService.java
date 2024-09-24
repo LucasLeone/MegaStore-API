@@ -1,57 +1,110 @@
-// package grupo11.megastore.products.service;
+package grupo11.megastore.products.service;
 
-// import grupo11.megastore.exception.ResourceNotFoundException;
-// import grupo11.megastore.products.model.Category;
-// import grupo11.megastore.products.model.repository.CategoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.stereotype.Service;
+import grupo11.megastore.products.interfaces.ICategoryService;
+import grupo11.megastore.products.dto.category.CategoryDTO;
+import grupo11.megastore.products.model.Category;
+import grupo11.megastore.products.model.repository.CategoryRepository;
+import grupo11.megastore.constant.EntityStatus;
+import grupo11.megastore.products.dto.ICategoryMapper;
+import grupo11.megastore.products.dto.category.CreateCategoryDTO;
+import grupo11.megastore.products.dto.category.UpdateCategoryDTO;
 
-// import java.util.List;
+import java.util.List;
+import java.util.Optional;
+import java.util.ArrayList;
 
-// @Service
-// public class CategoryService implements ICategoryService {
+@Service
+public class CategoryService implements ICategoryService {
+    
+    @Autowired
+    private CategoryRepository categoryRepository;
 
-//     @Autowired
-//     private CategoryRepository categoryRepository;
+    @Autowired
+    private ICategoryMapper categoryMapper;
 
-//     @Override
-//     public List<Category> listAll() {
-//         return categoryRepository.findByStatus(Category.ACTIVE);
-//     }
+    @Override
+    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
+        List<Category> categories = this.categoryRepository.findByStatus(EntityStatus.ACTIVE);
 
-//     @Override
-//     public Category getById(Integer id) {
-//         return categoryRepository.findById(id)
-//                 .filter(category -> category.getStatus() == Category.ACTIVE)
-//                 .orElse(null);
-//     }
+        List<CategoryDTO> dtos = new ArrayList<>();
+        categories.forEach(category -> {
+            dtos.add(this.categoryMapper.categoryToCategoryDTO(category));
+        });
 
-//     @Override
-//     public Category save(Category category) {
-//         category.setStatus(Category.ACTIVE);
-//         return categoryRepository.save(category);
-//     }
+        return new ResponseEntity<>(dtos, HttpStatus.OK);
+    }
 
-//     @Override
-//     public Category update(Category category) {
-//         if (!categoryRepository.existsById(category.getId())) {
-//             throw new ResourceNotFoundException("Category with id " + category.getId() + " not found.");
-//         }
-//         return categoryRepository.save(category);
-//     }
+    @Override
+    public ResponseEntity<CategoryDTO> getCategoryById(Long id) {
+        Optional<Category> category = this.categoryRepository.findByIdAndStatus(id, EntityStatus.ACTIVE);
 
-//     @Override
-//     public void delete(Integer id) {
-//         Category category = getById(id);
-//         if (category == null) {
-//             throw new ResourceNotFoundException("Category with id " + id + " not found.");
-//         }
-//         category.markAsDeleted();
-//         categoryRepository.save(category);
-//     }
+        if (category == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La categoría no existe");
+        }
 
-//     public boolean isNameExists(String name) {
-//         return categoryRepository.findByName(name).isPresent();
-//     }
-// }
+        CategoryDTO dto = this.categoryMapper.categoryToCategoryDTO(category.get());
+
+        return new ResponseEntity<>(dto, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<CategoryDTO> createCategory(CreateCategoryDTO category) {
+        Optional<Category> existingCategory = this.categoryRepository.findByNameAndStatus(category.getName(), EntityStatus.ACTIVE);
+
+        if (existingCategory.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La categoría ya existe");
+        }
+
+        Category entity = new Category();
+        entity.setName(category.getName());
+        entity.setDescription(category.getDescription());
+
+        entity = this.categoryRepository.save(entity);
+
+        CategoryDTO dto = this.categoryMapper.categoryToCategoryDTO(entity);
+
+        return new ResponseEntity<>(dto, HttpStatus.CREATED);
+    }
+
+    @Override
+    public ResponseEntity<CategoryDTO> updateCategory(Long id, UpdateCategoryDTO category) {
+        Category entity = this.categoryMapper.categoryDTOToCategory(this.getCategoryById(id).getBody());
+
+        if (category.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
+        }
+
+        if (category.getName() != null) {
+            entity.setName(category.getName());
+        }
+
+        if (category.getDescription() != null) {
+            entity.setDescription(category.getDescription());
+        }
+
+        entity = this.categoryRepository.save(entity);
+
+        CategoryDTO dto = this.categoryMapper.categoryToCategoryDTO(entity);
+
+        return new ResponseEntity<>(dto, HttpStatus.OK);
+    }
+
+    @Override
+    public void deleteCategory(Long id) {
+        Category entity = this.categoryMapper.categoryDTOToCategory(this.getCategoryById(id).getBody());
+
+        if (entity.getStatus() == EntityStatus.DELETED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La categoría no existe");
+        }
+
+        entity.delete();
+
+        this.categoryRepository.save(entity);
+    }
+}

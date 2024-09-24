@@ -1,33 +1,35 @@
-// package grupo11.megastore.products.model;
+package grupo11.megastore.products.model;
 
-// import jakarta.persistence.*;
-// import jakarta.validation.constraints.NotNull;
-// import lombok.Data;
-// import lombok.ToString;
-// import java.util.Set;
+import grupo11.megastore.constant.EntityStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
 
-// @Entity
-// @Data
-// @ToString(exclude = "subcategories")
-// public class Category {
-//     @Id
-//     @GeneratedValue(strategy = GenerationType.IDENTITY)
-//     private Integer id;
+@Entity
+@Data
+@Table(name = "categories")
+public class Category {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-//     @Column(nullable = false, unique = true)
-//     private String name;
-    
-//     private String description;
+    @Column(nullable = false, unique = true)
+    @Size(min = 2, max = 32)
+    private String name;
 
-//     @NotNull
-//     private int status;
-//     public static final int ACTIVE = 0;
-//     public static final int DELETED = 1;
+    @Column(nullable = true)
+    @Size(max = 128)
+    private String description;
 
-//     public void markAsDeleted() {
-//         this.setStatus(DELETED);
-//     }
+    @Column(nullable = false)
+    private EntityStatus status = EntityStatus.ACTIVE;
 
-//     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-//     private Set<Subcategory> subcategories;
-// }
+    public void delete() {
+        this.setStatus(EntityStatus.DELETED);;
+    }
+}
