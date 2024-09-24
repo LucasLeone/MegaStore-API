@@ -1,13 +1,24 @@
 package grupo11.megastore.products.service;
 
+import grupo11.megastore.constant.EntityStatus;
 import grupo11.megastore.exception.ResourceNotFoundException;
+import grupo11.megastore.products.dto.brand.BrandDTO;
+import grupo11.megastore.products.dto.brand.CreateBrandDTO;
+import grupo11.megastore.products.dto.brand.UpdateBrandDTO;
+import grupo11.megastore.products.interfaces.IBrandService;
+import grupo11.megastore.products.dto.IBrandMapper;
 import grupo11.megastore.products.model.Brand;
-import grupo11.megastore.products.repository.BrandRepository;
+import grupo11.megastore.products.model.repository.BrandRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
 
 @Service
 public class BrandService implements IBrandService {
@@ -15,43 +26,86 @@ public class BrandService implements IBrandService {
     @Autowired
     private BrandRepository brandRepository;
 
+    @Autowired
+    private IBrandMapper brandMapper;
+
     @Override
-    public List<Brand> listAll() {
-        return brandRepository.findByStatus(Brand.ACTIVE);
+    public ResponseEntity<List<BrandDTO>> getAllBrands() {
+        List<Brand> brands = this.brandRepository.findByStatus(EntityStatus.ACTIVE);
+
+        List<BrandDTO> dtos = new ArrayList<>();
+        brands.forEach(brand -> {
+            dtos.add(this.brandMapper.brandToBrandDTO(brand));
+        });
+
+        return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 
     @Override
-    public Brand getById(Integer id) {
-        return brandRepository.findById(id)
-                .filter(brand -> brand.getStatus() == Brand.ACTIVE)
-                .orElse(null);
-    }
+    public ResponseEntity<BrandDTO> getBrandById(Long id) {
+        Optional<Brand> brand = this.brandRepository.findByIdAndStatus(id, EntityStatus.ACTIVE);
 
-    @Override
-    public Brand save(Brand brand) {
-        brand.setStatus(Brand.ACTIVE);
-        return brandRepository.save(brand);
-    }
-
-    @Override
-    public Brand update(Brand brand) {
-        if (!brandRepository.existsById(brand.getId())) {
-            throw new ResourceNotFoundException("Brand with id " + brand.getId() + " not found.");
+        if (brand.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La marca no existe");
         }
-        return brandRepository.save(brand);
+
+        BrandDTO dto = this.brandMapper.brandToBrandDTO(brand.get());
+
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
     @Override
-    public void delete(Integer id) {
-        Brand brand = getById(id);
-        if (brand == null) {
-            throw new ResourceNotFoundException("Brand with id " + id + " not found.");
+    public ResponseEntity<BrandDTO> createBrand(CreateBrandDTO brand) {
+        Optional<Brand> existingBrand = this.brandRepository.findByNameAndStatus(brand.getName(), EntityStatus.ACTIVE);
+
+        if (existingBrand.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La marca ya existe");
         }
-        brand.markAsDeleted();
-        brandRepository.save(brand);
+
+        Brand entity = new Brand();
+        entity.setName(brand.getName());
+        entity.setDescription(brand.getDescription());
+
+        entity = this.brandRepository.save(entity);
+
+        BrandDTO dto = this.brandMapper.brandToBrandDTO(entity);
+
+        return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }
 
-    public boolean isNameExists(String name) {
-        return brandRepository.findByName(name).isPresent();
+    @Override
+    public ResponseEntity<BrandDTO> updateBrand(Long id, UpdateBrandDTO brand) {
+        Brand entity = this.brandMapper.brandDTOToBrand(this.getBrandById(id).getBody());
+
+        if (brand.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han especificado campos a actualizar");
+        }
+
+        if (brand.getName() != null) {
+            entity.setName(brand.getName());
+        }
+
+        if (brand.getDescription() != null) {
+            entity.setDescription(brand.getDescription());
+        }
+
+        entity = this.brandRepository.save(entity);
+        
+        BrandDTO dto = this.brandMapper.brandToBrandDTO(entity);
+
+        return new ResponseEntity<>(dto, HttpStatus.OK);
+    }
+
+    @Override
+    public void deleteBrand(Long id) {
+        Brand entity  = this.brandMapper.brandDTOToBrand(this.getBrandById(id).getBody());
+
+        if (entity.getStatus() == EntityStatus.DELETED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La marca no existe/ya ha sido eliminada");
+        }
+
+        entity.delete();
+
+        this.brandRepository.save(entity);
     }
 }

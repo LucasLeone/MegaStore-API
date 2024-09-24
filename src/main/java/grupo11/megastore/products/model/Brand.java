@@ -1,31 +1,35 @@
 package grupo11.megastore.products.model;
 
+import grupo11.megastore.constant.EntityStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.ToString;
 
 @Entity
 @Data
-@ToString
+@Table(name = "brands")
 public class Brand {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(nullable = false, unique = true)
+    @Size(min = 2, max = 32)
     private String name;
-    private String description;
-    @NotNull
-    private int status;
-    public static final int ACTIVE = 0;
-    public static final int DELETED = 1;
 
-    public void markAsDeleted() {
-        this.setStatus(DELETED);
+    @Column(nullable = true)
+    @Size(max = 128)
+    private String description;
+
+    @Column(nullable = false)
+    private EntityStatus status = EntityStatus.ACTIVE;
+
+    public void delete() {
+        this.setStatus(EntityStatus.DELETED);;
     }
 }
