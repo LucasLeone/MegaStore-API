@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import grupo11.megastore.products.dto.product.CreateProductDTO;
@@ -27,8 +28,13 @@ public class ProductController {
     private IProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<ProductDTO>> getAllProducts() {
-        return this.productService.getAllProducts();
+    public ResponseEntity<List<ProductDTO>> getAllProducts(
+        @RequestParam(required = false) Long categoryId,
+        @RequestParam(required = false) Long subcategoryId,
+        @RequestParam(required = false) Long brandId,
+        @RequestParam(required = false) String name
+    ) {
+        return this.productService.getAllProducts(categoryId, subcategoryId, brandId, name);
     }
 
     @GetMapping("/{id}")

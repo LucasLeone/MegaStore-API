@@ -10,30 +10,39 @@ import java.util.List;
 
 /**
  * Service interface for managing Product entities.
- * Defines methods for CRUD operations and other business logic related to products.
+ * Defines methods for CRUD operations and other business logic related to
+ * products.
  */
 public interface IProductService {
 
     /**
-     * Retrieves all products.
+     * Retrieves all products with optional filters.
      *
+     * @param categoryId    (Optional) The ID of the category to filter by.
+     * @param subcategoryId (Optional) The ID of the subcategory to filter by.
+     * @param brandId       (Optional) The ID of the brand to filter by.
+     * @param name          (Optional) A string to filter products by name
+     *                      containing this value.
      * @return A ResponseEntity containing a list of ProductDTO objects.
      */
-    ResponseEntity<List<ProductDTO>> getAllProducts();
+    ResponseEntity<List<ProductDTO>> getAllProducts(Long categoryId, Long subcategoryId, Long brandId, String name);
 
     /**
      * Retrieves a specific product by its unique identifier.
      *
      * @param id The unique identifier of the product to retrieve.
-     * @return A ResponseEntity containing the ProductDTO if found, or an appropriate HTTP status otherwise.
+     * @return A ResponseEntity containing the ProductDTO if found, or an
+     *         appropriate HTTP status otherwise.
      */
     ResponseEntity<ProductDTO> getProductById(Long id);
 
     /**
      * Creates a new product.
      *
-     * @param product The CreateProductDTO containing the details of the product to be created.
-     * @return A ResponseEntity containing the created ProductDTO along with an appropriate HTTP status.
+     * @param product The CreateProductDTO containing the details of the product to
+     *                be created.
+     * @return A ResponseEntity containing the created ProductDTO along with an
+     *         appropriate HTTP status.
      */
     ResponseEntity<ProductDTO> createProduct(CreateProductDTO product);
 
@@ -41,8 +50,10 @@ public interface IProductService {
      * Updates an existing product.
      *
      * @param id      The unique identifier of the product to update.
-     * @param product The UpdateProductDTO containing the updated details of the product.
-     * @return A ResponseEntity containing the updated ProductDTO if the update is successful, or an appropriate HTTP status otherwise.
+     * @param product The UpdateProductDTO containing the updated details of the
+     *                product.
+     * @return A ResponseEntity containing the updated ProductDTO if the update is
+     *         successful, or an appropriate HTTP status otherwise.
      */
     ResponseEntity<ProductDTO> updateProduct(Long id, UpdateProductDTO product);
 

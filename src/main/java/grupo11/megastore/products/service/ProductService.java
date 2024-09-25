@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -24,10 +25,11 @@ import grupo11.megastore.products.model.repository.BrandRepository;
 import grupo11.megastore.products.model.repository.CategoryRepository;
 import grupo11.megastore.products.model.repository.ProductRepository;
 import grupo11.megastore.products.model.repository.SubcategoryRepository;
+import grupo11.megastore.products.specification.ProductSpecification;
 
 @Service
 public class ProductService implements IProductService {
-    
+
     @Autowired
     private ProductRepository productRepository;
 
@@ -44,12 +46,19 @@ public class ProductService implements IProductService {
     private IProductMapper productMapper;
 
     @Override
-    public ResponseEntity<List<ProductDTO>> getAllProducts() {
-        List<Product> products = this.productRepository.findByStatus(EntityStatus.ACTIVE);
+    public ResponseEntity<List<ProductDTO>> getAllProducts(Long categoryId, Long subcategoryId, Long brandId,
+            String name) {
+        Specification<Product> spec = Specification.where(ProductSpecification.hasStatus(EntityStatus.ACTIVE))
+                .and(ProductSpecification.hasCategoryId(categoryId))
+                .and(ProductSpecification.hasSubcategoryId(subcategoryId))
+                .and(ProductSpecification.hasBrandId(brandId))
+                .and(ProductSpecification.nameContains(name));
+
+        List<Product> products = productRepository.findAll(spec);
 
         List<ProductDTO> dtos = new ArrayList<>();
         products.forEach(product -> {
-            dtos.add(this.productMapper.productToProductDTO(product));
+            dtos.add(productMapper.productToProductDTO(product));
         });
 
         return new ResponseEntity<>(dtos, HttpStatus.OK);
@@ -57,7 +66,7 @@ public class ProductService implements IProductService {
 
     @Override
     public ResponseEntity<ProductDTO> getProductById(Long id) {
-        Optional<Product> product = this.productRepository.findByIdAndStatus(id,EntityStatus.ACTIVE);
+        Optional<Product> product = this.productRepository.findByIdAndStatus(id, EntityStatus.ACTIVE);
 
         if (!product.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El producto no existe");
@@ -70,14 +79,17 @@ public class ProductService implements IProductService {
 
     @Override
     public ResponseEntity<ProductDTO> createProduct(CreateProductDTO product) {
-        Optional<Product> existingProduct = this.productRepository.findByNameAndStatus(product.getName(), EntityStatus.ACTIVE);
+        Optional<Product> existingProduct = this.productRepository.findByNameAndStatus(product.getName(),
+                EntityStatus.ACTIVE);
 
         if (existingProduct.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El producto ya existe");
         }
 
-        Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(product.getCategoryId(), EntityStatus.ACTIVE);
-        Optional<Subcategory> subcategoryOpt = this.subcategoryRepository.findByIdAndStatus(product.getSubcategoryId(), EntityStatus.ACTIVE);
+        Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(product.getCategoryId(),
+                EntityStatus.ACTIVE);
+        Optional<Subcategory> subcategoryOpt = this.subcategoryRepository.findByIdAndStatus(product.getSubcategoryId(),
+                EntityStatus.ACTIVE);
         Optional<Brand> brandOpt = this.brandRepository.findByIdAndStatus(product.getBrandId(), EntityStatus.ACTIVE);
 
         if (!categoryOpt.isPresent()) {
@@ -134,7 +146,8 @@ public class ProductService implements IProductService {
         }
 
         if (product.getCategoryId() != null) {
-            Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(product.getCategoryId(), EntityStatus.ACTIVE);
+            Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(product.getCategoryId(),
+                    EntityStatus.ACTIVE);
 
             if (!categoryOpt.isPresent()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La categoría no existe");
@@ -144,7 +157,8 @@ public class ProductService implements IProductService {
         }
 
         if (product.getSubcategoryId() != null) {
-            Optional<Subcategory> subcategoryOpt = this.subcategoryRepository.findByIdAndStatus(product.getSubcategoryId(), EntityStatus.ACTIVE);
+            Optional<Subcategory> subcategoryOpt = this.subcategoryRepository
+                    .findByIdAndStatus(product.getSubcategoryId(), EntityStatus.ACTIVE);
 
             if (!subcategoryOpt.isPresent()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La subcategoría no existe");
@@ -154,7 +168,8 @@ public class ProductService implements IProductService {
         }
 
         if (product.getBrandId() != null) {
-            Optional<Brand> brandOpt = this.brandRepository.findByIdAndStatus(product.getBrandId(), EntityStatus.ACTIVE);
+            Optional<Brand> brandOpt = this.brandRepository.findByIdAndStatus(product.getBrandId(),
+                    EntityStatus.ACTIVE);
 
             if (!brandOpt.isPresent()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La marca no existe");

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import grupo11.megastore.constant.EntityStatus;
 import grupo11.megastore.products.model.Product;
@@ -12,7 +13,7 @@ import grupo11.megastore.products.model.Product;
  * Repository interface for managing Product entities.
  * Extends JpaRepository to provide basic CRUD operations and custom query methods.
  */
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
     
     /**
      * Find a product by its ID and status.
