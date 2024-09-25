@@ -1,39 +1,41 @@
-// package grupo11.megastore.products.model;
+package grupo11.megastore.products.model;
 
-// import jakarta.persistence.Column;
-// import jakarta.persistence.Entity;
-// import jakarta.persistence.FetchType;
-// import jakarta.persistence.GeneratedValue;
-// import jakarta.persistence.GenerationType;
-// import jakarta.persistence.Id;
-// import jakarta.persistence.JoinColumn;
-// import jakarta.persistence.ManyToOne;
-// import jakarta.validation.constraints.NotNull;
-// import lombok.Data;
-// import lombok.ToString;
+import grupo11.megastore.constant.EntityStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
 
-// @Entity
-// @Data
-// @ToString
-// public class Subcategory {
-//     @Id
-//     @GeneratedValue(strategy = GenerationType.IDENTITY)
-//     private Integer id;
+@Entity
+@Data
+@Table(name = "subcategories")
+public class Subcategory {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-//     @Column(nullable = false, unique = true)
-//     private String name;
-//     private String description;
+    @Column(nullable = false, unique = true)
+    @Size(min = 2, max = 32)
+    private String name;
 
-//     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-//     @JoinColumn(name = "category_id", nullable = false)
-//     private Category category;
+    @Column(nullable = true)
+    @Size(max = 128)
+    private String description;
 
-//     @NotNull
-//     private int status;
-//     public static final int ACTIVE = 0;
-//     public static final int DELETED = 1;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
-//     public void markAsDeleted() {
-//         this.setStatus(DELETED);
-//     }
-// }
+    @Column(nullable = false)
+    private EntityStatus status = EntityStatus.ACTIVE;
+
+    public void delete() {
+        this.setStatus(EntityStatus.DELETED);;
+    }
+}
