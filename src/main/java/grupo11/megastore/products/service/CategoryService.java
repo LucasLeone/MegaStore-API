@@ -21,7 +21,7 @@ import java.util.ArrayList;
 
 @Service
 public class CategoryService implements ICategoryService {
-    
+
     @Autowired
     private CategoryRepository categoryRepository;
 
@@ -55,7 +55,8 @@ public class CategoryService implements ICategoryService {
 
     @Override
     public ResponseEntity<CategoryDTO> createCategory(CreateCategoryDTO category) {
-        Optional<Category> existingCategory = this.categoryRepository.findByNameAndStatus(category.getName(), EntityStatus.ACTIVE);
+        Optional<Category> existingCategory = this.categoryRepository.findByNameAndStatus(category.getName(),
+                EntityStatus.ACTIVE);
 
         if (existingCategory.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La categoría ya existe");
