@@ -25,9 +25,6 @@ public class Product {
     @Positive(message = "El precio debe ser positivo")
     private Double price;
 
-    // @Min(value = 0, message = "El stock no puede ser negativo")
-    // private Integer stock;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
@@ -39,11 +36,6 @@ public class Product {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
-
-    // @Lob
-    // @Basic(fetch = FetchType.LAZY)
-    // @Column(name = "image", nullable = true)
-    // private byte[] image;
 
     @Column(nullable = false)
     private EntityStatus status = EntityStatus.ACTIVE;
