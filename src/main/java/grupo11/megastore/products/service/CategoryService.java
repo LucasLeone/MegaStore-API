@@ -81,6 +81,13 @@ public class CategoryService implements ICategoryService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
         }
 
+        Optional<Category> existingCategory = this.categoryRepository.findByNameAndStatus(category.getName(),
+                EntityStatus.ACTIVE);
+
+        if (existingCategory.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La categoría ya existe");
+        }
+
         if (category.getName() != null) {
             entity.setName(category.getName());
         }

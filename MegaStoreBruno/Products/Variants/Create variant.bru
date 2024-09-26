@@ -1,0 +1,21 @@
+meta {
+  name: Create variant
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/variants
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "productId": 2,
+    "color": "Rojo",
+    "size": "M",
+    "stock": 1
+    // "image": null
+  }
+}

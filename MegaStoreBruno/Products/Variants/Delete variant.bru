@@ -1,0 +1,21 @@
+meta {
+  name: Delete variant
+  type: http
+  seq: 5
+}
+
+delete {
+  url: http://localhost:8080/variants/1
+  body: none
+  auth: none
+}
+
+body:json {
+  {
+    "productId": 2,
+    "color": "Rojo",
+    "size": "2XL",
+    "stock": 45
+    // "image": null
+  }
+}

@@ -2,7 +2,6 @@ package grupo11.megastore.products.dto.product;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -19,19 +18,14 @@ public class UpdateProductDTO {
     @Positive(message = "El precio debe ser positivo")
     private Double price;
 
-    @Min(value = 0, message = "El stock no puede ser negativo")
-    private Integer stock;
-
     private Long categoryId;
 
     private Long subcategoryId;
 
     private Long brandId;
 
-    private byte[] image;
-
     public boolean isEmpty() {
-        return this.name == null && this.description == null && this.price == null && this.stock == null
-                && this.categoryId == null && this.subcategoryId == null && this.brandId == null && this.image == null;
+        return this.name == null && this.description == null && this.price == null && this.categoryId == null
+                && this.subcategoryId == null && this.brandId == null;
     }
 }

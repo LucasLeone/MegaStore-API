@@ -1,0 +1,21 @@
+meta {
+  name: Update variant
+  type: http
+  seq: 3
+}
+
+put {
+  url: http://localhost:8080/variants/2
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "productId": 2,
+    "color": "Rojo",
+    "size": "4XL",
+    "stock": 45
+    // "image": null
+  }
+}

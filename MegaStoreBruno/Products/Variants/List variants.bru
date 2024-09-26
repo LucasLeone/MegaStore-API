@@ -1,0 +1,17 @@
+meta {
+  name: List variants
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8080/variants
+  body: none
+  auth: none
+}
+
+params:query {
+  ~size: 4xl
+  ~productId: 2
+  ~color: rojo
+}

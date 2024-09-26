@@ -80,6 +80,12 @@ public class BrandService implements IBrandService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han especificado campos a actualizar");
         }
 
+        Optional<Brand> existingBrand = this.brandRepository.findByNameAndStatus(brand.getName(), EntityStatus.ACTIVE);
+
+        if (existingBrand.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La marca ya existe");
+        }
+
         if (brand.getName() != null) {
             entity.setName(brand.getName());
         }

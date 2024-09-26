@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 import lombok.Data;
@@ -23,10 +22,6 @@ public class CreateProductDTO {
     @NotNull(message = "El precio es obligatorio")
     private Double price;
 
-    @Min(value = 0, message = "El stock no puede ser negativo")
-    @NotNull(message = "El stock es obligatorio")
-    private Integer stock;
-
     @NotNull(message = "La categoría es obligatoria")
     private Long categoryId;
 
@@ -35,6 +30,4 @@ public class CreateProductDTO {
 
     @NotNull(message = "La marca es obligatoria")
     private Long brandId;
-
-    private byte[] image;
 }

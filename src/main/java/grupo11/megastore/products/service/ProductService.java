@@ -108,11 +108,9 @@ public class ProductService implements IProductService {
         entity.setName(product.getName());
         entity.setDescription(product.getDescription());
         entity.setPrice(product.getPrice());
-        entity.setStock(product.getStock());
         entity.setCategory(categoryOpt.get());
         entity.setSubcategory(subcategoryOpt.get());
         entity.setBrand(brandOpt.get());
-        entity.setImage(product.getImage());
 
         entity = this.productRepository.save(entity);
 
@@ -129,6 +127,13 @@ public class ProductService implements IProductService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
         }
 
+        Optional<Product> existingProduct = this.productRepository.findByNameAndStatus(product.getName(),
+                EntityStatus.ACTIVE);
+
+        if (existingProduct.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "El producto ya existe");
+        }
+
         if (product.getName() != null) {
             entity.setName(product.getName());
         }
@@ -139,10 +144,6 @@ public class ProductService implements IProductService {
 
         if (product.getPrice() != null) {
             entity.setPrice(product.getPrice());
-        }
-
-        if (product.getStock() != null) {
-            entity.setStock(product.getStock());
         }
 
         if (product.getCategoryId() != null) {
@@ -176,10 +177,6 @@ public class ProductService implements IProductService {
             }
 
             entity.setBrand(brandOpt.get());
-        }
-
-        if (product.getImage() != null) {
-            entity.setImage(product.getImage());
         }
 
         entity = this.productRepository.save(entity);

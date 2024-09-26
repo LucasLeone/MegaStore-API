@@ -23,7 +23,7 @@ import grupo11.megastore.products.model.repository.SubcategoryRepository;
 
 @Service
 public class SubcategoryService implements ISubcategoryService {
-    
+
     @Autowired
     private SubcategoryRepository subcategoryRepository;
 
@@ -60,13 +60,15 @@ public class SubcategoryService implements ISubcategoryService {
 
     @Override
     public ResponseEntity<SubcategoryDTO> createSubcategory(CreateSubcategoryDTO subcategory) {
-        Optional<Subcategory> existingSubcategory = this.subcategoryRepository.findByNameAndStatus(subcategory.getName(), EntityStatus.ACTIVE);
+        Optional<Subcategory> existingSubcategory = this.subcategoryRepository
+                .findByNameAndStatus(subcategory.getName(), EntityStatus.ACTIVE);
 
         if (existingSubcategory.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La subcategoría ya existe");
         }
 
-        Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(subcategory.getCategoryId(), EntityStatus.ACTIVE);
+        Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(subcategory.getCategoryId(),
+                EntityStatus.ACTIVE);
 
         if (!categoryOpt.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La categoría no existe");
@@ -92,6 +94,13 @@ public class SubcategoryService implements ISubcategoryService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
         }
 
+        Optional<Subcategory> existingSubcategory = this.subcategoryRepository
+                .findByNameAndStatus(subcategory.getName(), EntityStatus.ACTIVE);
+
+        if (existingSubcategory.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La subcategoría ya existe");
+        }
+
         if (subcategory.getName() != null) {
             entity.setName(subcategory.getName());
         }
@@ -101,7 +110,8 @@ public class SubcategoryService implements ISubcategoryService {
         }
 
         if (subcategory.getCategoryId() != null) {
-            Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(subcategory.getCategoryId(), EntityStatus.ACTIVE);
+            Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(subcategory.getCategoryId(),
+                    EntityStatus.ACTIVE);
 
             if (!categoryOpt.isPresent()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La categoría no existe");
