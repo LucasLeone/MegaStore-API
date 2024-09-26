@@ -127,8 +127,8 @@ public class ProductService implements IProductService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
         }
 
-        Optional<Product> existingProduct = this.productRepository.findByNameAndStatus(product.getName(),
-                EntityStatus.ACTIVE);
+        Optional<Product> existingProduct = this.productRepository.findByNameAndStatusAndIdNot(product.getName(),
+                EntityStatus.ACTIVE, id);
 
         if (existingProduct.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El producto ya existe");

@@ -36,6 +36,17 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     Optional<Product> findByNameAndStatus(String name, EntityStatus status);
 
     /**
+     * Find a product by its name and status, excluding the product with the specified ID.
+     * 
+     * @param name   The name of the product to search for.
+     * @param status The status of the product to filter by.
+     * @param id     The ID of the product to exclude from the search.
+     * 
+     * @return       An Optional containing the product if found.
+     */
+    Optional<Product> findByNameAndStatusAndIdNot(String name, EntityStatus status, Long id);
+
+    /**
      * Find all products by their status.
      * 
      * @param status The status to filter products by.

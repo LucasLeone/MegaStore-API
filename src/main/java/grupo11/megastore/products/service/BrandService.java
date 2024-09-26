@@ -21,7 +21,7 @@ import java.util.Optional;
 
 @Service
 public class BrandService implements IBrandService {
-    
+
     @Autowired
     private BrandRepository brandRepository;
 
@@ -80,7 +80,8 @@ public class BrandService implements IBrandService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han especificado campos a actualizar");
         }
 
-        Optional<Brand> existingBrand = this.brandRepository.findByNameAndStatus(brand.getName(), EntityStatus.ACTIVE);
+        Optional<Brand> existingBrand = this.brandRepository.findByNameAndStatusAndIdNot(brand.getName(),
+                EntityStatus.ACTIVE, id);
 
         if (existingBrand.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La marca ya existe");
@@ -95,7 +96,7 @@ public class BrandService implements IBrandService {
         }
 
         entity = this.brandRepository.save(entity);
-        
+
         BrandDTO dto = this.brandMapper.brandToBrandDTO(entity);
 
         return new ResponseEntity<>(dto, HttpStatus.OK);
@@ -103,7 +104,7 @@ public class BrandService implements IBrandService {
 
     @Override
     public void deleteBrand(Long id) {
-        Brand entity  = this.brandMapper.brandDTOToBrand(this.getBrandById(id).getBody());
+        Brand entity = this.brandMapper.brandDTOToBrand(this.getBrandById(id).getBody());
 
         if (entity.getStatus() == EntityStatus.DELETED) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La marca no existe/ya ha sido eliminada");

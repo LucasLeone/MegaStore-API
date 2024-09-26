@@ -103,8 +103,8 @@ public class VariantService implements IVariantService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
         }
 
-        Optional<Variant> existingVariant = this.variantRepository.findByProductIdAndColorAndSizeAndStatus(
-                variant.getProductId(), variant.getColor(), variant.getSize(), EntityStatus.ACTIVE);
+        Optional<Variant> existingVariant = this.variantRepository.findByProductIdAndColorAndSizeAndStatusAndIdNot(
+                variant.getProductId(), variant.getColor(), variant.getSize(), EntityStatus.ACTIVE, id);
 
         if (existingVariant.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La variante ya existe");

@@ -69,6 +69,19 @@ public interface VariantRepository extends JpaRepository<Variant, Long>, JpaSpec
     Optional<Variant> findByProductIdAndColorAndSizeAndStatus(Long productId, String color, String size, EntityStatus status);
 
     /**
+     * Find variants by product ID, color, size, status, and excluding a specific ID.
+     * 
+     * @param productId The ID of the product.
+     * @param color     The color to filter by.
+     * @param size      The size to filter by.
+     * @param status    The status to filter by.
+     * @param id        The ID to exclude from the search.
+     * 
+     * @return          An Optional containing the variant if found.
+     */
+    Optional<Variant> findByProductIdAndColorAndSizeAndStatusAndIdNot(Long productId, String color, String size, EntityStatus status, Long id);
+
+    /**
      * (Opcional) Buscar variantes cuyo color contenga una cadena específica y tengan un estado dado.
      * 
      * @param color  La cadena a buscar dentro del color de la variante.

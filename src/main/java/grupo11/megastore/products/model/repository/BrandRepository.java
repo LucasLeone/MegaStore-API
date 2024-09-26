@@ -30,6 +30,17 @@ public interface BrandRepository extends JpaRepository<Brand, Long> {
     Optional<Brand> findByNameAndStatus(String name, EntityStatus status);
 
     /**
+     * Find a brand by name and status, excluding the brand with the specified id
+     * 
+     * @param name   name of the brand to search
+     * @param status status of the brand to search
+     * @param id     id of the brand to exclude
+     * 
+     * @return
+     */
+    Optional<Brand> findByNameAndStatusAndIdNot(String name, EntityStatus status, Long id);
+
+    /**
      * Find all brands by status
      * 
      * @param status status of the brand to search

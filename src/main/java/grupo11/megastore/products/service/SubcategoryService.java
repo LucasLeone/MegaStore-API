@@ -95,7 +95,7 @@ public class SubcategoryService implements ISubcategoryService {
         }
 
         Optional<Subcategory> existingSubcategory = this.subcategoryRepository
-                .findByNameAndStatus(subcategory.getName(), EntityStatus.ACTIVE);
+                .findByNameAndStatusAndIdNot(subcategory.getName(), EntityStatus.ACTIVE, id);
 
         if (existingSubcategory.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La subcategoría ya existe");
