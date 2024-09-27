@@ -55,7 +55,7 @@ public class CategoryService implements ICategoryService {
 
     @Override
     public ResponseEntity<CategoryDTO> createCategory(CreateCategoryDTO category) {
-        Optional<Category> existingCategory = this.categoryRepository.findByNameAndStatus(category.getName(),
+        Optional<Category> existingCategory = this.categoryRepository.findByNameIgnoreCaseAndStatus(category.getName(),
                 EntityStatus.ACTIVE);
 
         if (existingCategory.isPresent()) {
@@ -81,7 +81,7 @@ public class CategoryService implements ICategoryService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
         }
 
-        Optional<Category> existingCategory = this.categoryRepository.findByNameAndStatusAndIdNot(category.getName(),
+        Optional<Category> existingCategory = this.categoryRepository.findByNameIgnoreCaseAndStatusAndIdNot(category.getName(),
                 EntityStatus.ACTIVE, id);
 
         if (existingCategory.isPresent()) {

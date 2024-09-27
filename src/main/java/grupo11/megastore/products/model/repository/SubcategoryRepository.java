@@ -33,7 +33,7 @@ public interface SubcategoryRepository extends JpaRepository<Subcategory, Long> 
      * 
      * @return An Optional containing the subcategory if found.
      */
-    Optional<Subcategory> findByNameAndStatus(String name, EntityStatus status);
+    Optional<Subcategory> findByNameIgnoreCaseAndStatus(String name, EntityStatus status);
 
     /**
      * Find a subcategory by its name and status, excluding the subcategory with the
@@ -45,7 +45,7 @@ public interface SubcategoryRepository extends JpaRepository<Subcategory, Long> 
      * 
      * @return An Optional containing the subcategory if found.
      */
-    Optional<Subcategory> findByNameAndStatusAndIdNot(String name, EntityStatus status, Long id);
+    Optional<Subcategory> findByNameIgnoreCaseAndStatusAndIdNot(String name, EntityStatus status, Long id);
 
     /**
      * Find all subcategories by their status.

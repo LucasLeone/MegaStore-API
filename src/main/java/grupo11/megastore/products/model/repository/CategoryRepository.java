@@ -35,7 +35,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
      * @return An Optional containing the found Category if it exists and matches
      *         the status, or empty otherwise.
      */
-    Optional<Category> findByNameAndStatus(String name, EntityStatus status);
+    Optional<Category> findByNameIgnoreCaseAndStatus(String name, EntityStatus status);
 
     /**
      * Retrieves a category by its name and status, excluding the category with the
@@ -49,7 +49,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
      * @return An Optional containing the found Category if it exists and matches
      *         the status, or empty otherwise.
      */
-    Optional<Category> findByNameAndStatusAndIdNot(String name, EntityStatus status, Long id);
+    Optional<Category> findByNameIgnoreCaseAndStatusAndIdNot(String name, EntityStatus status, Long id);
 
     /**
      * Retrieves all categories that match the specified status.

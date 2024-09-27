@@ -33,7 +33,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      * 
      * @return       An Optional containing the product if found.
      */
-    Optional<Product> findByNameAndStatus(String name, EntityStatus status);
+    Optional<Product> findByNameIgnoreCaseAndStatus(String name, EntityStatus status);
 
     /**
      * Find a product by its name and status, excluding the product with the specified ID.
@@ -44,7 +44,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      * 
      * @return       An Optional containing the product if found.
      */
-    Optional<Product> findByNameAndStatusAndIdNot(String name, EntityStatus status, Long id);
+    Optional<Product> findByNameIgnoreCaseAndStatusAndIdNot(String name, EntityStatus status, Long id);
 
     /**
      * Find all products by their status.

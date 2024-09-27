@@ -55,7 +55,7 @@ public class BrandService implements IBrandService {
 
     @Override
     public ResponseEntity<BrandDTO> createBrand(CreateBrandDTO brand) {
-        Optional<Brand> existingBrand = this.brandRepository.findByNameAndStatus(brand.getName(), EntityStatus.ACTIVE);
+        Optional<Brand> existingBrand = this.brandRepository.findByNameIgnoreCaseAndStatus(brand.getName(), EntityStatus.ACTIVE);
 
         if (existingBrand.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La marca ya existe");
@@ -80,7 +80,7 @@ public class BrandService implements IBrandService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han especificado campos a actualizar");
         }
 
-        Optional<Brand> existingBrand = this.brandRepository.findByNameAndStatusAndIdNot(brand.getName(),
+        Optional<Brand> existingBrand = this.brandRepository.findByNameIgnoreCaseAndStatusAndIdNot(brand.getName(),
                 EntityStatus.ACTIVE, id);
 
         if (existingBrand.isPresent()) {

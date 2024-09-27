@@ -61,7 +61,7 @@ public class SubcategoryService implements ISubcategoryService {
     @Override
     public ResponseEntity<SubcategoryDTO> createSubcategory(CreateSubcategoryDTO subcategory) {
         Optional<Subcategory> existingSubcategory = this.subcategoryRepository
-                .findByNameAndStatus(subcategory.getName(), EntityStatus.ACTIVE);
+                .findByNameIgnoreCaseAndStatus(subcategory.getName(), EntityStatus.ACTIVE);
 
         if (existingSubcategory.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La subcategoría ya existe");
@@ -95,7 +95,7 @@ public class SubcategoryService implements ISubcategoryService {
         }
 
         Optional<Subcategory> existingSubcategory = this.subcategoryRepository
-                .findByNameAndStatusAndIdNot(subcategory.getName(), EntityStatus.ACTIVE, id);
+                .findByNameIgnoreCaseAndStatusAndIdNot(subcategory.getName(), EntityStatus.ACTIVE, id);
 
         if (existingSubcategory.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La subcategoría ya existe");

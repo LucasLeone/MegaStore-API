@@ -79,7 +79,7 @@ public class ProductService implements IProductService {
 
     @Override
     public ResponseEntity<ProductDTO> createProduct(CreateProductDTO product) {
-        Optional<Product> existingProduct = this.productRepository.findByNameAndStatus(product.getName(),
+        Optional<Product> existingProduct = this.productRepository.findByNameIgnoreCaseAndStatus(product.getName(),
                 EntityStatus.ACTIVE);
 
         if (existingProduct.isPresent()) {
@@ -127,7 +127,7 @@ public class ProductService implements IProductService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
         }
 
-        Optional<Product> existingProduct = this.productRepository.findByNameAndStatusAndIdNot(product.getName(),
+        Optional<Product> existingProduct = this.productRepository.findByNameIgnoreCaseAndStatusAndIdNot(product.getName(),
                 EntityStatus.ACTIVE, id);
 
         if (existingProduct.isPresent()) {
