@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import grupo11.megastore.constant.EntityStatus;
+import grupo11.megastore.exception.BadRequestException;
 import grupo11.megastore.products.dto.IVariantMapper;
 import grupo11.megastore.products.dto.variant.CreateVariantDTO;
 import grupo11.megastore.products.dto.variant.UpdateVariantDTO;
@@ -100,7 +101,7 @@ public class VariantService implements IVariantService {
         Variant entity = this.variantMapper.variantDTOToVariant(this.getVariantById(id).getBody());
 
         if (variant.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
+            throw new BadRequestException("No se han enviado datos para actualizar");
         }
 
         Optional<Variant> existingVariant = this.variantRepository.findByProductIdAndColorAndSizeAndStatusAndIdNot(
@@ -149,7 +150,7 @@ public class VariantService implements IVariantService {
         Variant entity = this.variantMapper.variantDTOToVariant(this.getVariantById(id).getBody());
 
         if (entity.getStatus() == EntityStatus.DELETED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La variante no existe");
+            throw new BadRequestException("La variante no existe");
         }
 
         entity.setStatus(EntityStatus.DELETED);

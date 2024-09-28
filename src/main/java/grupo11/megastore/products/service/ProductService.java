@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import grupo11.megastore.constant.EntityStatus;
+import grupo11.megastore.exception.BadRequestException;
 import grupo11.megastore.products.dto.IProductMapper;
 import grupo11.megastore.products.dto.product.CreateProductDTO;
 import grupo11.megastore.products.dto.product.ProductDTO;
@@ -124,7 +125,7 @@ public class ProductService implements IProductService {
         Product entity = this.productMapper.productDTOToProduct(this.getProductById(id).getBody());
 
         if (product.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
+            throw new BadRequestException("No se han enviado datos para actualizar");
         }
 
         Optional<Product> existingProduct = this.productRepository.findByNameIgnoreCaseAndStatusAndIdNot(product.getName(),
@@ -191,7 +192,7 @@ public class ProductService implements IProductService {
         Product entity = this.productMapper.productDTOToProduct(this.getProductById(id).getBody());
 
         if (entity.getStatus() == EntityStatus.DELETED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El producto no existe");
+            throw new BadRequestException("El producto no existe");
         }
 
         entity.setStatus(EntityStatus.DELETED);

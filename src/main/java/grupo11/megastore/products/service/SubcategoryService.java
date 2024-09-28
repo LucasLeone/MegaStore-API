@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import grupo11.megastore.constant.EntityStatus;
+import grupo11.megastore.exception.BadRequestException;
 import grupo11.megastore.products.dto.ISubcategoryMapper;
 import grupo11.megastore.products.dto.subcategory.CreateSubcategoryDTO;
 import grupo11.megastore.products.dto.subcategory.SubcategoryDTO;
@@ -91,7 +92,7 @@ public class SubcategoryService implements ISubcategoryService {
         Subcategory entity = this.subcategoryMapper.subcategoryDTOToSubcategory(this.getSubcategoryById(id).getBody());
 
         if (subcategory.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
+            throw new BadRequestException("No se han enviado datos para actualizar");
         }
 
         Optional<Subcategory> existingSubcategory = this.subcategoryRepository
@@ -132,7 +133,7 @@ public class SubcategoryService implements ISubcategoryService {
         Subcategory entity = this.subcategoryMapper.subcategoryDTOToSubcategory(this.getSubcategoryById(id).getBody());
 
         if (entity.getStatus() == EntityStatus.DELETED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La subcategoría no existe");
+            throw new BadRequestException("La subcategoría no existe");
         }
 
         entity.delete();

@@ -2,66 +2,119 @@ package grupo11.megastore.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ControllerAdvice
-/**
- * This class serves as an exception handler for controllers in general.
- *
- * Here, events caused by the controller at a given time can be handled, such as
- * exceptions detected at the controller level (500 Internal Server Error, 400
- * Bad Request, etc.)
- */
 public class CustomExceptionHandler {
 
-    /**
-     * Helper function that builds the response body for a validation error
-     * (Bad Request 400)
-     * 
-     * @param status
-     * @param message
-     * @param request
-     * @return
-     */
-    private Map<String, Object> buildBadRequestResponseBody(HttpStatus status, List<String> message,
-            WebRequest request) {
-        // Create the original Springboot body, adding a new property where the errors
-        // are present.
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        body.put("details", message);
-        body.put("path", request.getDescription(false).replace("uri=", ""));
+    private static final Logger logger = LoggerFactory.getLogger(CustomExceptionHandler.class);
 
-        return body;
+    /**
+     * Manejar excepciones de validación
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
+        String errorMessage = ex.getBindingResult().getFieldErrors()
+                                 .stream()
+                                 .map(fieldError -> fieldError.getDefaultMessage())
+                                 .reduce((msg1, msg2) -> msg1 + ", " + msg2)
+                                 .orElse("Error de validación");
+
+        ErrorResponse body = ErrorResponseBuilder.buildErrorResponse(
+            HttpStatus.BAD_REQUEST, 
+            errorMessage, 
+            request.getDescription(false).replace("uri=", "")
+        );
+
+        logger.error("Error de validación: {}", errorMessage);
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    // Handle validation errors only.
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
-        // Create a list for validation errors.
-        List<String> errors = new ArrayList<>();
+    /**
+     * Manejar UnauthorizedException
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex, WebRequest request) {
+        ErrorResponse body = ErrorResponseBuilder.buildErrorResponse(
+            HttpStatus.UNAUTHORIZED, 
+            ex.getMessage(), 
+            request.getDescription(false).replace("uri=", "")
+        );
 
-        // Iterate through each one.
-        for (FieldError fieldError : ex.getBindingResult().getFieldErrors())
-            errors.add(fieldError.getDefaultMessage());
+        logger.error("Autenticación fallida: {}", ex.getMessage());
 
-        // Create the original Springboot body, adding a new property where the errors
-        // are present.
-        Map<String, Object> body = this.buildBadRequestResponseBody(HttpStatus.BAD_REQUEST, errors, request);
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    }
 
-        // Return the response.
+    /**
+     * Manejar ForbiddenException
+     */
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenException(ForbiddenException ex, WebRequest request) {
+        ErrorResponse body = ErrorResponseBuilder.buildErrorResponse(
+            HttpStatus.FORBIDDEN, 
+            ex.getMessage(), 
+            request.getDescription(false).replace("uri=", "")
+        );
+
+        logger.error("Acceso denegado: {}", ex.getMessage());
+
+        return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
+    }
+
+    /**
+     * Manejar UserNotFoundException
+     */
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
+        ErrorResponse body = ErrorResponseBuilder.buildErrorResponse(
+            HttpStatus.NOT_FOUND, 
+            ex.getMessage(), 
+            request.getDescription(false).replace("uri=", "")
+        );
+
+        logger.error("Usuario no encontrado: {}", ex.getMessage());
+
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Manejar BadRequestException
+     */
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException ex, WebRequest request) {
+        ErrorResponse body = ErrorResponseBuilder.buildErrorResponse(
+            HttpStatus.BAD_REQUEST, 
+            ex.getMessage(), 
+            request.getDescription(false).replace("uri=", "")
+        );
+
+        logger.error("Solicitud inválida: {}", ex.getMessage());
+
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Manejar todas las demás excepciones
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex, WebRequest request) {
+        logger.error("Error inesperado: ", ex);
+
+        ErrorResponse body = ErrorResponseBuilder.buildErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Ocurrió un error inesperado.",
+            request.getDescription(false).replace("uri=", "")
+        );
+
+        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

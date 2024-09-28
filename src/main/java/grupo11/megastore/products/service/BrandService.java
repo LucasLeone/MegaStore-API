@@ -1,6 +1,7 @@
 package grupo11.megastore.products.service;
 
 import grupo11.megastore.constant.EntityStatus;
+import grupo11.megastore.exception.BadRequestException;
 import grupo11.megastore.products.dto.brand.BrandDTO;
 import grupo11.megastore.products.dto.brand.CreateBrandDTO;
 import grupo11.megastore.products.dto.brand.UpdateBrandDTO;
@@ -77,7 +78,7 @@ public class BrandService implements IBrandService {
         Brand entity = this.brandMapper.brandDTOToBrand(this.getBrandById(id).getBody());
 
         if (brand.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han especificado campos a actualizar");
+            throw new BadRequestException("No se han especificado campos a actualizar");
         }
 
         Optional<Brand> existingBrand = this.brandRepository.findByNameIgnoreCaseAndStatusAndIdNot(brand.getName(),
@@ -107,7 +108,7 @@ public class BrandService implements IBrandService {
         Brand entity = this.brandMapper.brandDTOToBrand(this.getBrandById(id).getBody());
 
         if (entity.getStatus() == EntityStatus.DELETED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La marca no existe/ya ha sido eliminada");
+            throw new BadRequestException( "La marca no existe/ya ha sido eliminada");
         }
 
         entity.delete();

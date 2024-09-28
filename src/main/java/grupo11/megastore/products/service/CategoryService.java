@@ -11,6 +11,7 @@ import grupo11.megastore.products.dto.category.CategoryDTO;
 import grupo11.megastore.products.model.Category;
 import grupo11.megastore.products.model.repository.CategoryRepository;
 import grupo11.megastore.constant.EntityStatus;
+import grupo11.megastore.exception.BadRequestException;
 import grupo11.megastore.products.dto.ICategoryMapper;
 import grupo11.megastore.products.dto.category.CreateCategoryDTO;
 import grupo11.megastore.products.dto.category.UpdateCategoryDTO;
@@ -78,7 +79,7 @@ public class CategoryService implements ICategoryService {
         Category entity = this.categoryMapper.categoryDTOToCategory(this.getCategoryById(id).getBody());
 
         if (category.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se han enviado datos para actualizar");
+            throw new BadRequestException("No se han enviado datos para actualizar");
         }
 
         Optional<Category> existingCategory = this.categoryRepository.findByNameIgnoreCaseAndStatusAndIdNot(category.getName(),
@@ -108,7 +109,7 @@ public class CategoryService implements ICategoryService {
         Category entity = this.categoryMapper.categoryDTOToCategory(this.getCategoryById(id).getBody());
 
         if (entity.getStatus() == EntityStatus.DELETED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La categoría no existe");
+            throw new BadRequestException("La categoría no existe");
         }
 
         entity.delete();

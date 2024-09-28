@@ -10,9 +10,13 @@ post {
   auth: none
 }
 
+headers {
+  Authorization: Bearer {{Token}}
+}
+
 body:json {
   {
-    "name": "Test3",
+    "name": "Test7",
     "description": "testasdasd"
   }
 }
