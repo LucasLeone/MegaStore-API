@@ -18,22 +18,30 @@ public class JWTUtil {
 	@Value("${jwt_secret}")
 	private String secret;
 
+	@Value("${jwt.token.validity}")
+	private long jwtTokenValidity;
+
 	public String generateToken(String email) throws IllegalArgumentException, JWTCreationException {
+		Date issuedAt = new Date();
+		Date expirationDate = new Date(issuedAt.getTime() + jwtTokenValidity * 1000);
+
 		return JWT.create()
 				.withSubject("User Details")
 				.withClaim("email", email)
-				.withIssuedAt(new Date())
+				.withIssuedAt(issuedAt)
+				.withExpiresAt(expirationDate)
 				.withIssuer("Event Scheduler")
 				.sign(Algorithm.HMAC256(secret));
 	}
-	
+
 	public String validateTokenAndRetrieveSubject(String token) throws JWTVerificationException {
 		JWTVerifier verifier = JWT.require(Algorithm.HMAC256(secret))
-									.withSubject("User Details")
-									.withIssuer("Event Scheduler").build();
-		
+				.withSubject("User Details")
+				.withIssuer("Event Scheduler")
+				.build();
+
 		DecodedJWT jwt = verifier.verify(token);
-		
+
 		return jwt.getClaim("email").asString();
 	}
 }
