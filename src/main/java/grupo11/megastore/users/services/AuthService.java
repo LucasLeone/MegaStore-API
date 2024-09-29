@@ -10,7 +10,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import grupo11.megastore.security.JWTUtil;
 import grupo11.megastore.users.dto.user.LoginCredentials;
@@ -18,7 +17,7 @@ import grupo11.megastore.users.dto.user.RegisterUserDTO;
 import grupo11.megastore.users.dto.user.UserDTO;
 import grupo11.megastore.users.interfaces.IAuthService;
 import grupo11.megastore.users.interfaces.IUserService;
-import grupo11.megastore.exception.BadRequestException;
+import grupo11.megastore.exception.APIException;
 
 @Service
 public class AuthService implements IAuthService {
@@ -38,7 +37,7 @@ public class AuthService implements IAuthService {
     @Override
     public ResponseEntity<Map<String, Object>> register(RegisterUserDTO body) {
         if (!body.getPassword().equals(body.getPasswordConfirmation())) {
-            throw new BadRequestException("Las contraseñas no coinciden");
+            throw new APIException("Las contraseñas no coinciden");
         }
 
         String encodedPassword = passwordEncoder.encode(body.getPassword());
@@ -60,7 +59,7 @@ public class AuthService implements IAuthService {
                     credentials.getEmail(), credentials.getPassword());
             this.authenticationManager.authenticate(authCredentials);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
+            throw new APIException("Credenciales inválidas");
         }
 
         String token = jwtUtil.generateToken(credentials.getEmail());

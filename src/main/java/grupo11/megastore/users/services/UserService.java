@@ -1,14 +1,14 @@
 package grupo11.megastore.users.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import grupo11.megastore.constant.EntityStatus;
-import grupo11.megastore.exception.BadRequestException;
-import grupo11.megastore.exception.UserNotFoundException;
+import grupo11.megastore.exception.APIException;
+import grupo11.megastore.exception.ResourceNotFoundException;
 import grupo11.megastore.users.dto.IUserMapper;
 import grupo11.megastore.users.interfaces.IUserService;
 import grupo11.megastore.users.model.repository.RoleRepository;
@@ -49,13 +49,10 @@ public class UserService implements IUserService {
 
     @Override
     public ResponseEntity<UserDTO> getUserById(Long id) {
-        Optional<User> user = this.userRepository.findByIdAndStatus(id, EntityStatus.ACTIVE);
+        User user = this.userRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
 
-        if (user.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El usuario no existe");
-        }
-
-        UserDTO dto = this.userMapper.userToUserDTO(user.get());
+        UserDTO dto = this.userMapper.userToUserDTO(user);
 
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
@@ -65,7 +62,7 @@ public class UserService implements IUserService {
         Optional<User> user = this.userRepository.findByEmailAndStatus(email, EntityStatus.ACTIVE);
 
         if (user.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El usuario no existe");
+            throw new ResourceNotFoundException("Usuario", "email", email);
         }
 
         return this.userMapper.userToUserDTO(user.get());
@@ -73,37 +70,29 @@ public class UserService implements IUserService {
 
     @Override
     public UserDTO registerUser(RegisterUserDTO body) {
-        User existingUser = this.userRepository.findByEmailAndStatus(body.getEmail(), EntityStatus.ACTIVE)
-                .orElseThrow(() -> new UserNotFoundException("El usuario con email " + body.getEmail() + " ya existe"));
+        try {
+            User user = this.userMapper.registerUserDTOToUser(body);
 
-        if (existingUser != null) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "El usuario ya existe");
+            Role role = this.roleRepository.findByName("USER").get();
+            user.getRoles().add(role);
+
+            User registeredUser = this.userRepository.save(user);
+
+            return this.userMapper.userToUserDTO(registeredUser);
+        } catch (DataIntegrityViolationException e) {
+            throw new APIException("Ya existe un usuario con ese email");
         }
-
-        User user = this.userMapper.registerUserDTOToUser(body);
-        user.setPassword(body.getPassword());
-        user.setStatus(EntityStatus.ACTIVE);
-
-        Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new BadRequestException("Rol 'USER' no encontrado"));
-        user.getRoles().add(userRole);
-
-        User savedUser = userRepository.save(user);
-
-        return this.userMapper.userToUserDTO(savedUser);
     }
 
     @Override
     public ResponseEntity<UserDTO> updateUser(Long id, UpdateUserDTO body) {
-        // Recupera la entidad directamente del repositorio
         User entity = this.userRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
-                .orElseThrow(() -> new UserNotFoundException("El usuario con id " + id + " no existe"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
         if (body.isEmpty()) {
-            throw new BadRequestException("No hay datos para actualizar");
+            throw new APIException("No hay datos para actualizar");
         }
 
-        // Actualiza solo los campos necesarios
         if (body.getFirstName() != null) {
             entity.setFirstName(body.getFirstName());
         }
@@ -112,10 +101,8 @@ public class UserService implements IUserService {
             entity.setLastName(body.getLastName());
         }
 
-        // Guarda la entidad actualizada sin alterar otros campos como la contraseña
         User updatedUser = this.userRepository.save(entity);
 
-        // Mapea la entidad actualizada a UserDTO para la respuesta
         UserDTO dto = this.userMapper.userToUserDTO(updatedUser);
 
         return new ResponseEntity<>(dto, HttpStatus.OK);
@@ -124,7 +111,7 @@ public class UserService implements IUserService {
     @Override
     public void deleteUser(Long id) {
         User entity = this.userRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
-                .orElseThrow(() -> new UserNotFoundException("El usuario con id " + id + " no existe"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
         entity.delete();
 

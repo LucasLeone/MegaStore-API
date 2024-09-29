@@ -2,17 +2,16 @@ package grupo11.megastore.products.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import grupo11.megastore.constant.EntityStatus;
-import grupo11.megastore.exception.BadRequestException;
+import grupo11.megastore.exception.APIException;
+import grupo11.megastore.exception.ResourceNotFoundException;
 import grupo11.megastore.products.dto.IProductMapper;
 import grupo11.megastore.products.dto.product.CreateProductDTO;
 import grupo11.megastore.products.dto.product.ProductDTO;
@@ -67,51 +66,38 @@ public class ProductService implements IProductService {
 
     @Override
     public ResponseEntity<ProductDTO> getProductById(Long id) {
-        Optional<Product> product = this.productRepository.findByIdAndStatus(id, EntityStatus.ACTIVE);
+        Product product = this.productRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", id));
 
-        if (!product.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El producto no existe");
-        }
-
-        ProductDTO dto = this.productMapper.productToProductDTO(product.get());
+        ProductDTO dto = this.productMapper.productToProductDTO(product);
 
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
     @Override
     public ResponseEntity<ProductDTO> createProduct(CreateProductDTO product) {
-        Optional<Product> existingProduct = this.productRepository.findByNameIgnoreCaseAndStatus(product.getName(),
-                EntityStatus.ACTIVE);
+        this.productRepository.findByNameIgnoreCaseAndStatus(product.getName(), EntityStatus.ACTIVE)
+                .ifPresent(existingProduct -> {
+                    throw new APIException("El producto ya existe");
+                });
 
-        if (existingProduct.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "El producto ya existe");
-        }
+        Category category = this.categoryRepository.findByIdAndStatus(product.getCategoryId(), EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría", "id", product.getCategoryId()));
 
-        Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(product.getCategoryId(),
-                EntityStatus.ACTIVE);
-        Optional<Subcategory> subcategoryOpt = this.subcategoryRepository.findByIdAndStatus(product.getSubcategoryId(),
-                EntityStatus.ACTIVE);
-        Optional<Brand> brandOpt = this.brandRepository.findByIdAndStatus(product.getBrandId(), EntityStatus.ACTIVE);
+        Subcategory subcategory = this.subcategoryRepository
+                .findByIdAndStatus(product.getSubcategoryId(), EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Subcategoría", "id", product.getSubcategoryId()));
 
-        if (!categoryOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La categoría no existe");
-        }
-
-        if (!subcategoryOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La subcategoría no existe");
-        }
-
-        if (!brandOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La marca no existe");
-        }
+        Brand brand = this.brandRepository.findByIdAndStatus(product.getBrandId(), EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Marca", "id", product.getBrandId()));
 
         Product entity = new Product();
         entity.setName(product.getName());
         entity.setDescription(product.getDescription());
         entity.setPrice(product.getPrice());
-        entity.setCategory(categoryOpt.get());
-        entity.setSubcategory(subcategoryOpt.get());
-        entity.setBrand(brandOpt.get());
+        entity.setCategory(category);
+        entity.setSubcategory(subcategory);
+        entity.setBrand(brand);
 
         entity = this.productRepository.save(entity);
 
@@ -125,15 +111,13 @@ public class ProductService implements IProductService {
         Product entity = this.productMapper.productDTOToProduct(this.getProductById(id).getBody());
 
         if (product.isEmpty()) {
-            throw new BadRequestException("No se han enviado datos para actualizar");
+            throw new APIException("No se han enviado datos para actualizar");
         }
 
-        Optional<Product> existingProduct = this.productRepository.findByNameIgnoreCaseAndStatusAndIdNot(product.getName(),
-                EntityStatus.ACTIVE, id);
-
-        if (existingProduct.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "El producto ya existe");
-        }
+        this.productRepository.findByNameIgnoreCaseAndStatusAndIdNot(product.getName(), EntityStatus.ACTIVE, id)
+                .ifPresent(existingProduct -> {
+                    throw new APIException("El producto ya existe");
+                });
 
         if (product.getName() != null) {
             entity.setName(product.getName());
@@ -148,36 +132,25 @@ public class ProductService implements IProductService {
         }
 
         if (product.getCategoryId() != null) {
-            Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(product.getCategoryId(),
-                    EntityStatus.ACTIVE);
+            Category category = this.categoryRepository.findByIdAndStatus(product.getCategoryId(), EntityStatus.ACTIVE)
+                    .orElseThrow(() -> new ResourceNotFoundException("Categoría", "id", product.getCategoryId()));
 
-            if (!categoryOpt.isPresent()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La categoría no existe");
-            }
-
-            entity.setCategory(categoryOpt.get());
+            entity.setCategory(category);
         }
 
         if (product.getSubcategoryId() != null) {
-            Optional<Subcategory> subcategoryOpt = this.subcategoryRepository
-                    .findByIdAndStatus(product.getSubcategoryId(), EntityStatus.ACTIVE);
+            Subcategory subcategory = this.subcategoryRepository
+                    .findByIdAndStatus(product.getSubcategoryId(), EntityStatus.ACTIVE)
+                    .orElseThrow(() -> new ResourceNotFoundException("Subcategoría", "id", product.getSubcategoryId()));
 
-            if (!subcategoryOpt.isPresent()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La subcategoría no existe");
-            }
-
-            entity.setSubcategory(subcategoryOpt.get());
+            entity.setSubcategory(subcategory);
         }
 
         if (product.getBrandId() != null) {
-            Optional<Brand> brandOpt = this.brandRepository.findByIdAndStatus(product.getBrandId(),
-                    EntityStatus.ACTIVE);
+            Brand brand = this.brandRepository.findByIdAndStatus(product.getBrandId(), EntityStatus.ACTIVE)
+                    .orElseThrow(() -> new ResourceNotFoundException("Marca", "id", product.getBrandId()));
 
-            if (!brandOpt.isPresent()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La marca no existe");
-            }
-
-            entity.setBrand(brandOpt.get());
+            entity.setBrand(brand);
         }
 
         entity = this.productRepository.save(entity);
@@ -189,13 +162,10 @@ public class ProductService implements IProductService {
 
     @Override
     public void deleteProduct(Long id) {
-        Product entity = this.productMapper.productDTOToProduct(this.getProductById(id).getBody());
+        Product entity = this.productRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", id));
 
-        if (entity.getStatus() == EntityStatus.DELETED) {
-            throw new BadRequestException("El producto no existe");
-        }
-
-        entity.setStatus(EntityStatus.DELETED);
+        entity.delete();
 
         this.productRepository.save(entity);
     }

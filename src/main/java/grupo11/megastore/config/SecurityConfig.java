@@ -17,8 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import grupo11.megastore.security.JWTFilter;
 import grupo11.megastore.users.services.UserDetailsServiceImpl;
-import grupo11.megastore.exception.CustomAuthenticationEntryPoint;
-import grupo11.megastore.exception.CustomAccessDeniedHandler;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -45,8 +44,8 @@ public class SecurityConfig {
                 .anyRequest().authenticated())
 
             .exceptionHandling(exception -> exception
-                .authenticationEntryPoint(customAuthenticationEntryPoint())
-                .accessDeniedHandler(customAccessDeniedHandler()))
+                .authenticationEntryPoint((request, response, authException) -> 
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")))
 
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -76,15 +75,5 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
-    }
-
-    @Bean
-    public CustomAuthenticationEntryPoint customAuthenticationEntryPoint() {
-        return new CustomAuthenticationEntryPoint();
-    }
-
-    @Bean
-    public CustomAccessDeniedHandler customAccessDeniedHandler() {
-        return new CustomAccessDeniedHandler();
     }
 }

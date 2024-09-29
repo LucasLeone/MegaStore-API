@@ -2,16 +2,15 @@ package grupo11.megastore.products.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import grupo11.megastore.constant.EntityStatus;
-import grupo11.megastore.exception.BadRequestException;
+import grupo11.megastore.exception.APIException;
+import grupo11.megastore.exception.ResourceNotFoundException;
 import grupo11.megastore.products.dto.ISubcategoryMapper;
 import grupo11.megastore.products.dto.subcategory.CreateSubcategoryDTO;
 import grupo11.megastore.products.dto.subcategory.SubcategoryDTO;
@@ -48,37 +47,28 @@ public class SubcategoryService implements ISubcategoryService {
 
     @Override
     public ResponseEntity<SubcategoryDTO> getSubcategoryById(Long id) {
-        Optional<Subcategory> subcategory = this.subcategoryRepository.findByIdAndStatus(id, EntityStatus.ACTIVE);
+        Subcategory subcategory = this.subcategoryRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new APIException("La subcategoría no existe"));
 
-        if (!subcategory.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La subcategoría no existe");
-        }
-
-        SubcategoryDTO dto = this.subcategoryMapper.subcategoryToSubcategoryDTO(subcategory.get());
+        SubcategoryDTO dto = this.subcategoryMapper.subcategoryToSubcategoryDTO(subcategory);
 
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
     @Override
     public ResponseEntity<SubcategoryDTO> createSubcategory(CreateSubcategoryDTO subcategory) {
-        Optional<Subcategory> existingSubcategory = this.subcategoryRepository
-                .findByNameIgnoreCaseAndStatus(subcategory.getName(), EntityStatus.ACTIVE);
+        this.subcategoryRepository.findByNameIgnoreCaseAndStatus(subcategory.getName(), EntityStatus.ACTIVE)
+                .ifPresent(existingSubcategory -> {
+                    throw new APIException("La subcategorìa ya existe");
+                });
 
-        if (existingSubcategory.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "La subcategoría ya existe");
-        }
-
-        Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(subcategory.getCategoryId(),
-                EntityStatus.ACTIVE);
-
-        if (!categoryOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La categoría no existe");
-        }
+        Category category = this.categoryRepository.findByIdAndStatus(subcategory.getCategoryId(), EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría", "id", subcategory.getCategoryId()));
 
         Subcategory entity = new Subcategory();
         entity.setName(subcategory.getName());
         entity.setDescription(subcategory.getDescription());
-        entity.setCategory(categoryOpt.get());
+        entity.setCategory(category);
 
         entity = this.subcategoryRepository.save(entity);
 
@@ -92,15 +82,13 @@ public class SubcategoryService implements ISubcategoryService {
         Subcategory entity = this.subcategoryMapper.subcategoryDTOToSubcategory(this.getSubcategoryById(id).getBody());
 
         if (subcategory.isEmpty()) {
-            throw new BadRequestException("No se han enviado datos para actualizar");
+            throw new APIException("No se han enviado datos para actualizar");
         }
 
-        Optional<Subcategory> existingSubcategory = this.subcategoryRepository
-                .findByNameIgnoreCaseAndStatusAndIdNot(subcategory.getName(), EntityStatus.ACTIVE, id);
-
-        if (existingSubcategory.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "La subcategoría ya existe");
-        }
+        this.subcategoryRepository.findByNameIgnoreCaseAndStatusAndIdNot(subcategory.getName(), EntityStatus.ACTIVE, id)
+                .ifPresent(existingSubcategory -> {
+                    throw new APIException("La subcategorìa ya existe");
+                });
 
         if (subcategory.getName() != null) {
             entity.setName(subcategory.getName());
@@ -111,14 +99,11 @@ public class SubcategoryService implements ISubcategoryService {
         }
 
         if (subcategory.getCategoryId() != null) {
-            Optional<Category> categoryOpt = this.categoryRepository.findByIdAndStatus(subcategory.getCategoryId(),
-                    EntityStatus.ACTIVE);
+            Category category = this.categoryRepository
+                    .findByIdAndStatus(subcategory.getCategoryId(), EntityStatus.ACTIVE)
+                    .orElseThrow(() -> new ResourceNotFoundException("Categoría", "id", subcategory.getCategoryId()));
 
-            if (!categoryOpt.isPresent()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La categoría no existe");
-            }
-
-            entity.setCategory(categoryOpt.get());
+            entity.setCategory(category);
         }
 
         entity = this.subcategoryRepository.save(entity);
@@ -130,11 +115,8 @@ public class SubcategoryService implements ISubcategoryService {
 
     @Override
     public void deleteSubcategory(Long id) {
-        Subcategory entity = this.subcategoryMapper.subcategoryDTOToSubcategory(this.getSubcategoryById(id).getBody());
-
-        if (entity.getStatus() == EntityStatus.DELETED) {
-            throw new BadRequestException("La subcategoría no existe");
-        }
+        Subcategory entity = this.subcategoryRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Subcategoría", "id", id));
 
         entity.delete();
 

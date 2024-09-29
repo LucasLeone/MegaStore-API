@@ -2,17 +2,16 @@ package grupo11.megastore.products.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import grupo11.megastore.constant.EntityStatus;
-import grupo11.megastore.exception.BadRequestException;
+import grupo11.megastore.exception.APIException;
+import grupo11.megastore.exception.ResourceNotFoundException;
 import grupo11.megastore.products.dto.IVariantMapper;
 import grupo11.megastore.products.dto.variant.CreateVariantDTO;
 import grupo11.megastore.products.dto.variant.UpdateVariantDTO;
@@ -55,35 +54,27 @@ public class VariantService implements IVariantService {
 
     @Override
     public ResponseEntity<VariantDTO> getVariantById(Long id) {
-        Optional<Variant> variant = this.variantRepository.findByIdAndStatus(id, EntityStatus.ACTIVE);
+        Variant variant = this.variantRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Variante", "id", id));
 
-        if (!variant.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La variante no existe");
-        }
-
-        VariantDTO dto = this.variantMapper.variantToVariantDTO(variant.get());
+        VariantDTO dto = this.variantMapper.variantToVariantDTO(variant);
 
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
     @Override
     public ResponseEntity<VariantDTO> createVariant(CreateVariantDTO variant) {
-        Optional<Variant> existingVariant = this.variantRepository.findByProductIdAndColorAndSizeAndStatus(
-                variant.getProductId(), variant.getColor(), variant.getSize(), EntityStatus.ACTIVE);
+        this.variantRepository.findByProductIdAndColorAndSizeAndStatus(variant.getProductId(), variant.getColor(),
+                variant.getSize(), EntityStatus.ACTIVE)
+                .ifPresent(existingVariant -> {
+                    throw new APIException("La variante ya existe");
+                });
 
-        if (existingVariant.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "La variante ya existe");
-        }
-
-        Optional<Product> productOpt = this.productRepository.findByIdAndStatus(variant.getProductId(),
-                EntityStatus.ACTIVE);
-
-        if (!productOpt.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El producto no existe");
-        }
+        Product product = this.productRepository.findByIdAndStatus(variant.getProductId(), EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", variant.getProductId()));
 
         Variant entity = new Variant();
-        entity.setProduct(productOpt.get());
+        entity.setProduct(product);
         entity.setColor(variant.getColor());
         entity.setSize(variant.getSize());
         entity.setStock(variant.getStock());
@@ -101,25 +92,20 @@ public class VariantService implements IVariantService {
         Variant entity = this.variantMapper.variantDTOToVariant(this.getVariantById(id).getBody());
 
         if (variant.isEmpty()) {
-            throw new BadRequestException("No se han enviado datos para actualizar");
+            throw new APIException("No se han enviado datos para actualizar");
         }
 
-        Optional<Variant> existingVariant = this.variantRepository.findByProductIdAndColorAndSizeAndStatusAndIdNot(
-                variant.getProductId(), variant.getColor(), variant.getSize(), EntityStatus.ACTIVE, id);
-
-        if (existingVariant.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "La variante ya existe");
-        }
+        this.variantRepository.findByProductIdAndColorAndSizeAndStatusAndIdNot(variant.getProductId(), variant.getColor(),
+                variant.getSize(), EntityStatus.ACTIVE, id)
+                .ifPresent(existingVariant -> {
+                    throw new APIException("La variante ya existe");
+                });
 
         if (variant.getProductId() != null) {
-            Optional<Product> productOpt = this.productRepository.findByIdAndStatus(variant.getProductId(),
-                    EntityStatus.ACTIVE);
+            Product product = this.productRepository.findByIdAndStatus(variant.getProductId(), EntityStatus.ACTIVE)
+                    .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", variant.getProductId()));
 
-            if (!productOpt.isPresent()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El producto no existe");
-            }
-
-            entity.setProduct(productOpt.get());
+            entity.setProduct(product);
         }
 
         if (variant.getColor() != null) {
@@ -147,13 +133,10 @@ public class VariantService implements IVariantService {
 
     @Override
     public void deleteVariant(Long id) {
-        Variant entity = this.variantMapper.variantDTOToVariant(this.getVariantById(id).getBody());
+        Variant entity = this.variantRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Variante", "id", id));
 
-        if (entity.getStatus() == EntityStatus.DELETED) {
-            throw new BadRequestException("La variante no existe");
-        }
-
-        entity.setStatus(EntityStatus.DELETED);
+        entity.delete();
 
         this.variantRepository.save(entity);
     }
