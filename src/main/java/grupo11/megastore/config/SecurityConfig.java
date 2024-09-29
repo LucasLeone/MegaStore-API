@@ -40,6 +40,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers(AppConstants.PUBLIC_URLS).permitAll()
                 .requestMatchers(HttpMethod.GET, "/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/users/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
 

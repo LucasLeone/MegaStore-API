@@ -21,11 +21,13 @@ public class UserInfoConfig implements UserDetails {
 
 	private static final long serialVersionUID = 1L;
 
+	private Long id;
 	private String email;
 	private String password;
 	private List<GrantedAuthority> authorities;
 
 	public UserInfoConfig(User user) {
+		this.id = user.getId();
 		this.email = user.getEmail();
 		this.password = user.getPassword();
 		this.authorities = user.getRoles().stream()
