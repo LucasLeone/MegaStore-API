@@ -1,11 +1,11 @@
 meta {
-  name: Create user
+  name: Update user as admin
   type: http
-  seq: 7
+  seq: 8
 }
 
-post {
-  url: http://localhost:8080/users
+put {
+  url: http://localhost:8080/users/2
   body: json
   auth: none
 }
@@ -15,8 +15,6 @@ body:json {
     "email": "lucasleonetatto33@gmail.com",
     "first_name": "Lucas",
     "last_name": "Leone",
-    "password": "admin12345",
-    "password_confirmation": "admin12345",
     "roles": ["ADMIN", "USER"]
   }
 }

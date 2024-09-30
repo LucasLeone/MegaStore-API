@@ -4,9 +4,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -21,7 +25,13 @@ public class UpdateUserDTO {
     @Pattern(regexp = "^[a-zA-Z ]*$", message = "El apellido solo puede contener letras")
     private String lastName;
 
+    @Email(message = "El email debe ser válido")
+    private String email;
+
+    private Set<String> roles = new HashSet<>();
+
     public boolean isEmpty() {
-        return this.firstName == null && this.lastName == null;
+        return this.firstName == null && this.lastName == null && this.email == null
+                && (this.roles == null || this.roles.isEmpty());
     }
 }

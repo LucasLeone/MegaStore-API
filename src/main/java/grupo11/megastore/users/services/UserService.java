@@ -51,7 +51,7 @@ public class UserService implements IUserService {
     @Override
     public UserDTO getUserById(Long id) {
         User user = this.userRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
 
         UserDTO dto = this.userMapper.userToUserDTO(user);
 
@@ -93,7 +93,7 @@ public class UserService implements IUserService {
             Set<Role> roles = new HashSet<>();
             for (String roleName : body.getRoles()) {
                 Role role = this.roleRepository.findByName(roleName)
-                    .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", roleName));
+                        .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", roleName));
                 roles.add(role);
             }
             user.setRoles(roles);
@@ -115,19 +115,45 @@ public class UserService implements IUserService {
             throw new APIException("No hay datos para actualizar");
         }
 
+        boolean updated = false;
+
         if (body.getFirstName() != null) {
             entity.setFirstName(body.getFirstName());
+            updated = true;
         }
 
         if (body.getLastName() != null) {
             entity.setLastName(body.getLastName());
+            updated = true;
         }
 
-        User updatedUser = this.userRepository.save(entity);
+        if (body.getEmail() != null) {
+            entity.setEmail(body.getEmail());
+            updated = true;
+        }
 
-        UserDTO dto = this.userMapper.userToUserDTO(updatedUser);
+        if (body.getRoles() != null && !body.getRoles().isEmpty()) {
+            Set<Role> roles = new HashSet<>();
+            for (String roleName : body.getRoles()) {
+                Role role = this.roleRepository.findByName(roleName)
+                        .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", roleName));
+                roles.add(role);
+            }
+            entity.setRoles(roles);
+            updated = true;
+        }
 
-        return dto;
+        if (!updated) {
+            throw new APIException("No hay datos válidos para actualizar");
+        }
+
+        try {
+            User updatedUser = this.userRepository.save(entity);
+            UserDTO dto = this.userMapper.userToUserDTO(updatedUser);
+            return dto;
+        } catch (DataIntegrityViolationException e) {
+            throw new APIException("Ya existe un usuario con ese email");
+        }
     }
 
     @Override
