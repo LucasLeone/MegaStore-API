@@ -2,6 +2,8 @@ package grupo11.megastore.users.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import grupo11.megastore.constant.EntityStatus;
@@ -108,6 +110,19 @@ public class UserService implements IUserService {
 
     @Override
     public UserDTO updateUser(Long id, UpdateUserDTO body) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+
+        User currentUser = userRepository.findByEmailAndStatus(currentUsername, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "email", currentUsername));
+
+        boolean isAdmin = currentUser.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("ADMIN"));
+
+        if (!isAdmin && !currentUser.getId().equals(id)) {
+            throw new APIException("No tienes permiso para actualizar este usuario");
+        }
+
         User entity = this.userRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
 
@@ -127,20 +142,26 @@ public class UserService implements IUserService {
             updated = true;
         }
 
-        if (body.getEmail() != null) {
-            entity.setEmail(body.getEmail());
-            updated = true;
-        }
-
-        if (body.getRoles() != null && !body.getRoles().isEmpty()) {
-            Set<Role> roles = new HashSet<>();
-            for (String roleName : body.getRoles()) {
-                Role role = this.roleRepository.findByName(roleName)
-                        .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", roleName));
-                roles.add(role);
+        if (isAdmin) {
+            if (body.getEmail() != null) {
+                entity.setEmail(body.getEmail());
+                updated = true;
             }
-            entity.setRoles(roles);
-            updated = true;
+
+            if (body.getRoles() != null && !body.getRoles().isEmpty()) {
+                Set<Role> roles = new HashSet<>();
+                for (String roleName : body.getRoles()) {
+                    Role role = this.roleRepository.findByName(roleName)
+                            .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", roleName));
+                    roles.add(role);
+                }
+                entity.setRoles(roles);
+                updated = true;
+            }
+        } else {
+            if (body.getEmail() != null || (body.getRoles() != null && !body.getRoles().isEmpty())) {
+                throw new APIException("No tienes permiso para actualizar email o roles");
+            }
         }
 
         if (!updated) {
