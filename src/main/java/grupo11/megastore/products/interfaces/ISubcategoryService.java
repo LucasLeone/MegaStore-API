@@ -17,9 +17,10 @@ public interface ISubcategoryService {
     /**
      * Retrieves all subcategories.
      * 
+     * @param categoryId The ID of the category.
      * @return A ResponseEntity containing a list of SubcategoryDTO objects.
      */
-    public ResponseEntity<List<SubcategoryDTO>> getAllSubcategories();
+    public ResponseEntity<List<SubcategoryDTO>> getAllSubcategories(Long categoryId);
 
     /**
      * Retrieves a specific subcategory by its unique identifier.

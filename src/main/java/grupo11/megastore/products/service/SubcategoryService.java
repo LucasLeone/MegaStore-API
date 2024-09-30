@@ -34,8 +34,11 @@ public class SubcategoryService implements ISubcategoryService {
     private ISubcategoryMapper subcategoryMapper;
 
     @Override
-    public ResponseEntity<List<SubcategoryDTO>> getAllSubcategories() {
-        List<Subcategory> subcategories = this.subcategoryRepository.findByStatus(EntityStatus.ACTIVE);
+    public ResponseEntity<List<SubcategoryDTO>> getAllSubcategories(Long categoryId) {
+        this.categoryRepository.findByIdAndStatus(categoryId, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría", "id", categoryId));
+
+        List<Subcategory> subcategories = this.subcategoryRepository.findByCategoryIdAndStatus(categoryId, EntityStatus.ACTIVE);
 
         List<SubcategoryDTO> dtos = new ArrayList<>();
         subcategories.forEach(subcategory -> {
