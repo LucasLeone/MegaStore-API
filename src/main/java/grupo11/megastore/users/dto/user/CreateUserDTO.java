@@ -7,11 +7,12 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-
 import lombok.Data;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import grupo11.megastore.users.dto.address.CreateAddressDTO;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -29,16 +30,22 @@ public class CreateUserDTO {
     @Email(message = "El email debe ser válido")
     private String email;
 
+    @Pattern(regexp = "^[0-9]{9,15}$", message = "El número de teléfono debe tener entre 9 y 15 dígitos")
+    private String phoneNumber;
+
     @Size(min = 8, max = 20, message = "La contraseña debe tener entre 8 y 20 caracteres")
     private String password;
 
     @Size(min = 8, max = 20, message = "La confirmación de la contraseña debe tener entre 8 y 20 caracteres")
     private String passwordConfirmation;
 
+    private CreateAddressDTO address;
+
     private Set<String> roles = new HashSet<>();
 
     public boolean isEmpty() {
         return this.firstName == null && this.lastName == null && this.email == null && this.password == null
-                && this.passwordConfirmation == null && (this.roles == null || this.roles.isEmpty());
+                && this.passwordConfirmation == null && this.phoneNumber == null && this.address == null
+                && (this.roles == null || this.roles.isEmpty());
     }
 }

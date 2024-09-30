@@ -1,6 +1,5 @@
 package grupo11.megastore.users.dto;
 
-
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

@@ -9,12 +9,14 @@ import org.springframework.stereotype.Service;
 import grupo11.megastore.constant.EntityStatus;
 import grupo11.megastore.exception.APIException;
 import grupo11.megastore.exception.ResourceNotFoundException;
-import grupo11.megastore.users.dto.IUserMapper;
 import grupo11.megastore.users.interfaces.IUserService;
 import grupo11.megastore.users.model.repository.RoleRepository;
 import grupo11.megastore.users.model.repository.UserRepository;
 import grupo11.megastore.users.model.Role;
 import grupo11.megastore.users.model.User;
+import grupo11.megastore.users.model.Address;
+import grupo11.megastore.users.dto.IAddressMapper;
+import grupo11.megastore.users.dto.IUserMapper;
 import grupo11.megastore.users.dto.user.UpdateUserDTO;
 import grupo11.megastore.users.dto.user.UserDTO;
 import grupo11.megastore.users.dto.user.CreateUserDTO;
@@ -37,6 +39,9 @@ public class UserService implements IUserService {
 
     @Autowired
     private IUserMapper userMapper;
+
+    @Autowired
+    private IAddressMapper addressMapper;
 
     @Override
     public List<UserDTO> getAllUsers() {
@@ -83,7 +88,7 @@ public class UserService implements IUserService {
 
             return this.userMapper.userToUserDTO(registeredUser);
         } catch (DataIntegrityViolationException e) {
-            throw new APIException("Ya existe un usuario con ese email");
+            throw new APIException("Ya existe un usuario con ese email o número de teléfono");
         }
     }
 
@@ -104,7 +109,7 @@ public class UserService implements IUserService {
 
             return this.userMapper.userToUserDTO(createdUser);
         } catch (DataIntegrityViolationException e) {
-            throw new APIException("Ya existe un usuario con ese email");
+            throw new APIException("Ya existe un usuario con ese email o número de teléfono");
         }
     }
 
@@ -142,6 +147,17 @@ public class UserService implements IUserService {
             updated = true;
         }
 
+        if (body.getPhoneNumber() != null) {
+            entity.setPhoneNumber(body.getPhoneNumber());
+            updated = true;
+        }
+
+        if (body.getAddress() != null) {
+            Address address = addressMapper.createAddressDTOToAddress(body.getAddress());
+            entity.setAddress(address);
+            updated = true;
+        }
+
         if (isAdmin) {
             if (body.getEmail() != null) {
                 entity.setEmail(body.getEmail());
@@ -173,7 +189,7 @@ public class UserService implements IUserService {
             UserDTO dto = this.userMapper.userToUserDTO(updatedUser);
             return dto;
         } catch (DataIntegrityViolationException e) {
-            throw new APIException("Ya existe un usuario con ese email");
+            throw new APIException("Ya existe un usuario con ese email o número de teléfono");
         }
     }
 

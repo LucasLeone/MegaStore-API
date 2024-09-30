@@ -5,7 +5,7 @@ meta {
 }
 
 put {
-  url: http://localhost:8080/users/2
+  url: http://localhost:8080/users/3
   body: json
   auth: none
 }
@@ -15,6 +15,17 @@ body:json {
     "email": "lucasleonetatto33@gmail.com",
     "first_name": "Lucas",
     "last_name": "Leone",
-    "roles": ["ADMIN", "USER"]
+    "roles": ["ADMIN", "USER"],
+    "phone_number": "3534817539",
+    "address": {
+      "id": 3,
+      "street": "25 de mayo",
+      "number": "528",
+      "floor": null,
+      "apartment": null,
+      "city": "Arroyo Cabral",
+      "postal_code": "5918",
+      "country": "ARG"
+    }
   }
 }

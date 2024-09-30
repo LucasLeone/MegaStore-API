@@ -29,6 +29,14 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Pattern(regexp = "^[0-9]{9,15}$", message = "El número de teléfono debe tener entre 9 y 15 dígitos")
+    @Column(nullable = false, unique = true)
+    private String phoneNumber;    
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id", referencedColumnName = "id")
+    private Address address;
+
     private String password;
 
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.EAGER)
