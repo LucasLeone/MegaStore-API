@@ -29,7 +29,7 @@ public class SubcategoryController {
     private ISubcategoryService subcategoryService;
 
     @GetMapping
-    public ResponseEntity<List<SubcategoryDTO>> getAllSubcategories(@RequestParam(required = true) Long categoryId) {
+    public ResponseEntity<List<SubcategoryDTO>> getAllSubcategories(@RequestParam(name = "categoryId", required = false) Long categoryId) {
         return this.subcategoryService.getAllSubcategories(categoryId);
     }
 

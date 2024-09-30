@@ -15,9 +15,9 @@ import java.util.List;
 public interface ISubcategoryService {
 
     /**
-     * Retrieves all subcategories.
+     * Retrieves all subcategories. If categoryId is provided, filters by that category.
      * 
-     * @param categoryId The ID of the category.
+     * @param categoryId (Opcional) The ID of the category to filter subcategories.
      * @return A ResponseEntity containing a list of SubcategoryDTO objects.
      */
     public ResponseEntity<List<SubcategoryDTO>> getAllSubcategories(Long categoryId);
