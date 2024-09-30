@@ -2,8 +2,6 @@ package grupo11.megastore.users.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import grupo11.megastore.constant.EntityStatus;
@@ -17,11 +15,14 @@ import grupo11.megastore.users.model.Role;
 import grupo11.megastore.users.model.User;
 import grupo11.megastore.users.dto.user.UpdateUserDTO;
 import grupo11.megastore.users.dto.user.UserDTO;
+import grupo11.megastore.users.dto.user.CreateUserDTO;
 import grupo11.megastore.users.dto.user.RegisterUserDTO;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UserService implements IUserService {
@@ -36,7 +37,7 @@ public class UserService implements IUserService {
     private IUserMapper userMapper;
 
     @Override
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
+    public List<UserDTO> getAllUsers() {
         List<User> users = this.userRepository.findByStatus(EntityStatus.ACTIVE);
 
         List<UserDTO> dtos = new ArrayList<>();
@@ -44,17 +45,17 @@ public class UserService implements IUserService {
             dtos.add(this.userMapper.userToUserDTO(user));
         });
 
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
+        return dtos;
     }
 
     @Override
-    public ResponseEntity<UserDTO> getUserById(Long id) {
+    public UserDTO getUserById(Long id) {
         User user = this.userRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
 
         UserDTO dto = this.userMapper.userToUserDTO(user);
 
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        return dto;
     }
 
     @Override
@@ -85,9 +86,30 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public ResponseEntity<UserDTO> updateUser(Long id, UpdateUserDTO body) {
+    public UserDTO createUser(CreateUserDTO body) {
+        try {
+            User user = this.userMapper.createUserDTOToUser(body);
+
+            Set<Role> roles = new HashSet<>();
+            for (String roleName : body.getRoles()) {
+                Role role = this.roleRepository.findByName(roleName)
+                    .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", roleName));
+                roles.add(role);
+            }
+            user.setRoles(roles);
+
+            User createdUser = this.userRepository.save(user);
+
+            return this.userMapper.userToUserDTO(createdUser);
+        } catch (DataIntegrityViolationException e) {
+            throw new APIException("Ya existe un usuario con ese email");
+        }
+    }
+
+    @Override
+    public UserDTO updateUser(Long id, UpdateUserDTO body) {
         User entity = this.userRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
 
         if (body.isEmpty()) {
             throw new APIException("No hay datos para actualizar");
@@ -105,13 +127,13 @@ public class UserService implements IUserService {
 
         UserDTO dto = this.userMapper.userToUserDTO(updatedUser);
 
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        return dto;
     }
 
     @Override
     public void deleteUser(Long id) {
         User entity = this.userRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
 
         entity.delete();
 

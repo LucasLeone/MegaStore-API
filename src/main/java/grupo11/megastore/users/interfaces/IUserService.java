@@ -1,6 +1,6 @@
 package grupo11.megastore.users.interfaces;
 
-import org.springframework.http.ResponseEntity;
+import grupo11.megastore.users.dto.user.CreateUserDTO;
 import grupo11.megastore.users.dto.user.RegisterUserDTO;
 import grupo11.megastore.users.dto.user.UpdateUserDTO;
 import grupo11.megastore.users.dto.user.UserDTO;
@@ -18,7 +18,7 @@ public interface IUserService {
      *
      * @return A ResponseEntity containing a list of UserDTO objects.
      */
-    ResponseEntity<List<UserDTO>> getAllUsers();
+    List<UserDTO> getAllUsers();
 
     /**
      * Retrieves a specific user by its unique identifier.
@@ -27,7 +27,7 @@ public interface IUserService {
      * @return A ResponseEntity containing the UserDTO if found, or an
      * appropriate HTTP status otherwise.
      */
-    ResponseEntity<UserDTO> getUserById(Long id);
+    UserDTO getUserById(Long id);
 
     /**
      * Retrieves a specific user by its email.
@@ -48,6 +48,15 @@ public interface IUserService {
     UserDTO registerUser(RegisterUserDTO body);
 
     /**
+     * Creates a new user.
+     *
+     * @param body The CreateUserDTO containing the details of the user to be
+     *             created.
+     * @return The created UserDTO.
+     */
+    UserDTO createUser(CreateUserDTO body);
+
+    /**
      * Updates an existing user.
      *
      * @param id   The unique identifier of the user to update.
@@ -56,7 +65,7 @@ public interface IUserService {
      * @return A ResponseEntity containing the updated UserDTO if the update is
      * successful, or an appropriate HTTP status otherwise.
      */
-    ResponseEntity<UserDTO> updateUser(Long id, UpdateUserDTO user);
+    UserDTO updateUser(Long id, UpdateUserDTO user);
 
     /**
      * Deletes a user.

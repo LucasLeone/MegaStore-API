@@ -1,0 +1,21 @@
+meta {
+  name: Create user
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:8080/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "lucasleonetatto2@gmail.com",
+    "first_name": "Lucas",
+    "last_name": "Leone",
+    "password": "admin12345",
+    "password_confirmation": "admin12345"
+  }
+}
