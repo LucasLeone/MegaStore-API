@@ -61,4 +61,11 @@ public interface IProductService {
      * @param id The unique identifier of the product to delete.
      */
     void deleteProduct(Long id);
+
+    /**
+     * Restores a deleted product by marking its status as ACTIVE.
+     *
+     * @param id The unique identifier of the product to restore.
+     */
+    void restoreProduct(Long id);
 }

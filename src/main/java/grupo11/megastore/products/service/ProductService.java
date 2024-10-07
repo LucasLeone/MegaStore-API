@@ -185,4 +185,14 @@ public class ProductService implements IProductService {
 
         this.productRepository.save(entity);
     }
+
+    @Override
+    public void restoreProduct(Long id) {
+        Product entity = this.productRepository.findByIdAndStatus(id, EntityStatus.DELETED)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", id));
+
+        entity.restore();
+
+        this.productRepository.save(entity);
+    }
 }

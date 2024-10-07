@@ -43,4 +43,8 @@ public class Product {
     public void delete() {
         this.setStatus(EntityStatus.DELETED);
     }
+
+    public void restore() {
+        this.setStatus(EntityStatus.ACTIVE);
+    }
 }

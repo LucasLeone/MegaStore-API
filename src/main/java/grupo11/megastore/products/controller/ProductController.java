@@ -60,4 +60,10 @@ public class ProductController {
         this.productService.deleteProduct(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreProduct(@PathVariable Long id) {
+        this.productService.restoreProduct(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }
