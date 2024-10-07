@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import grupo11.megastore.constant.EntityStatus;
@@ -34,7 +32,7 @@ public class SubcategoryService implements ISubcategoryService {
     private ISubcategoryMapper subcategoryMapper;
 
     @Override
-    public ResponseEntity<List<SubcategoryDTO>> getAllSubcategories(Long categoryId) {
+    public List<SubcategoryDTO> getAllSubcategories(Long categoryId) {
         List<Subcategory> subcategories;
 
         if (categoryId != null) {
@@ -51,21 +49,35 @@ public class SubcategoryService implements ISubcategoryService {
             dtos.add(subcategoryMapper.subcategoryToSubcategoryDTO(subcategory));
         });
 
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
+        return dtos;
     }
 
     @Override
-    public ResponseEntity<SubcategoryDTO> getSubcategoryById(Long id) {
+    public List<SubcategoryDTO> getAllDeletedSubcategories() {
+        List<Subcategory> subcategories = this.subcategoryRepository.findByStatus(EntityStatus.DELETED);
+
+        List<SubcategoryDTO> dtos = new ArrayList<>();
+        subcategories.forEach(subcategory -> {
+            dtos.add(subcategoryMapper.subcategoryToSubcategoryDTO(subcategory));
+        });
+
+        return dtos;
+    }
+
+    @Override
+    public SubcategoryDTO getSubcategoryById(Long id) {
         Subcategory subcategory = this.subcategoryRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
-                .orElseThrow(() -> new APIException("La subcategoría no existe"));
+                .orElseThrow(() -> new ResourceNotFoundException("Subcategoría", "id", id));
 
-        SubcategoryDTO dto = this.subcategoryMapper.subcategoryToSubcategoryDTO(subcategory);
-
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        return this.subcategoryMapper.subcategoryToSubcategoryDTO(subcategory);
     }
 
     @Override
-    public ResponseEntity<SubcategoryDTO> createSubcategory(CreateSubcategoryDTO subcategory) {
+    public SubcategoryDTO createSubcategory(CreateSubcategoryDTO subcategory) {
+        if (subcategory.getName() != null && (subcategory.getName().startsWith(" ") || subcategory.getName().endsWith(" "))) {
+            throw new APIException("El nombre de la subcategoría no puede empezar o terminar con espacios");
+        }
+
         this.subcategoryRepository.findByNameIgnoreCaseAndStatus(subcategory.getName(), EntityStatus.ACTIVE)
                 .ifPresent(existingSubcategory -> {
                     throw new APIException("La subcategoría ya existe");
@@ -81,13 +93,11 @@ public class SubcategoryService implements ISubcategoryService {
 
         entity = this.subcategoryRepository.save(entity);
 
-        SubcategoryDTO dto = this.subcategoryMapper.subcategoryToSubcategoryDTO(entity);
-
-        return new ResponseEntity<>(dto, HttpStatus.CREATED);
+        return this.subcategoryMapper.subcategoryToSubcategoryDTO(entity);
     }
 
     @Override
-    public ResponseEntity<SubcategoryDTO> updateSubcategory(Long id, UpdateSubcategoryDTO subcategory) {
+    public SubcategoryDTO updateSubcategory(Long id, UpdateSubcategoryDTO subcategory) {
         Subcategory entity = this.subcategoryRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Subcategoría", "id", id));
 
@@ -95,12 +105,16 @@ public class SubcategoryService implements ISubcategoryService {
             throw new APIException("No se han enviado datos para actualizar");
         }
 
-        this.subcategoryRepository.findByNameIgnoreCaseAndStatusAndIdNot(subcategory.getName(), EntityStatus.ACTIVE, id)
-                .ifPresent(existingSubcategory -> {
-                    throw new APIException("La subcategoría ya existe");
-                });
-
         if (subcategory.getName() != null) {
+            if (subcategory.getName().startsWith(" ") || subcategory.getName().endsWith(" ")) {
+                throw new APIException("El nombre de la subcategoría no puede empezar o terminar con espacios");
+            }
+
+            this.subcategoryRepository.findByNameIgnoreCaseAndStatusAndIdNot(subcategory.getName(), EntityStatus.ACTIVE, id)
+                    .ifPresent(existingSubcategory -> {
+                        throw new APIException("La subcategoría ya existe");
+                    });
+
             entity.setName(subcategory.getName());
         }
 
@@ -118,9 +132,7 @@ public class SubcategoryService implements ISubcategoryService {
 
         entity = this.subcategoryRepository.save(entity);
 
-        SubcategoryDTO dto = this.subcategoryMapper.subcategoryToSubcategoryDTO(entity);
-
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        return this.subcategoryMapper.subcategoryToSubcategoryDTO(entity);
     }
 
     @Override

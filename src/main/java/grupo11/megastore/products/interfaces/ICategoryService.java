@@ -1,7 +1,5 @@
 package grupo11.megastore.products.interfaces;
 
-import org.springframework.http.ResponseEntity;
-
 import grupo11.megastore.products.dto.category.CategoryDTO;
 import grupo11.megastore.products.dto.category.CreateCategoryDTO;
 import grupo11.megastore.products.dto.category.UpdateCategoryDTO;
@@ -14,7 +12,15 @@ public interface ICategoryService {
      * 
      * @return
      */
-    public ResponseEntity<List<CategoryDTO>> getAllCategories();
+    public List<CategoryDTO> getAllCategories();
+
+
+    /**
+     * Get all deleted categories
+     * 
+     * @return
+     */
+    public List<CategoryDTO> getAllDeletedCategories();
 
     /**
      * Get a category by id
@@ -23,7 +29,7 @@ public interface ICategoryService {
      * 
      * @return
      */
-    public ResponseEntity<CategoryDTO> getCategoryById(Long id);
+    public CategoryDTO getCategoryById(Long id);
 
     /**
      * Create a new category
@@ -32,7 +38,7 @@ public interface ICategoryService {
      * 
      * @return
      */
-    public ResponseEntity<CategoryDTO> createCategory(CreateCategoryDTO category);
+    public CategoryDTO createCategory(CreateCategoryDTO category);
 
     /**
      * Update a category
@@ -42,7 +48,7 @@ public interface ICategoryService {
      * 
      * @return
      */
-    public ResponseEntity<CategoryDTO> updateCategory(Long id, UpdateCategoryDTO category);
+    public CategoryDTO updateCategory(Long id, UpdateCategoryDTO category);
 
     /**
      * Delete a category

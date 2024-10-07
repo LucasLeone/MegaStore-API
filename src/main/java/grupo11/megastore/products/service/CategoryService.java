@@ -1,8 +1,6 @@
 package grupo11.megastore.products.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import grupo11.megastore.products.interfaces.ICategoryService;
@@ -29,7 +27,7 @@ public class CategoryService implements ICategoryService {
     private ICategoryMapper categoryMapper;
 
     @Override
-    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
+    public List<CategoryDTO> getAllCategories() {
         List<Category> categories = this.categoryRepository.findByStatus(EntityStatus.ACTIVE);
 
         List<CategoryDTO> dtos = new ArrayList<>();
@@ -37,21 +35,35 @@ public class CategoryService implements ICategoryService {
             dtos.add(this.categoryMapper.categoryToCategoryDTO(category));
         });
 
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
+        return dtos;
     }
 
     @Override
-    public ResponseEntity<CategoryDTO> getCategoryById(Long id) {
+    public List<CategoryDTO> getAllDeletedCategories() {
+        List<Category> categories = this.categoryRepository.findByStatus(EntityStatus.DELETED);
+
+        List<CategoryDTO> dtos = new ArrayList<>();
+        categories.forEach(category -> {
+            dtos.add(this.categoryMapper.categoryToCategoryDTO(category));
+        });
+
+        return dtos;
+    }
+
+    @Override
+    public CategoryDTO getCategoryById(Long id) {
         Category category = this.categoryRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría", "id", id));
 
-        CategoryDTO dto = this.categoryMapper.categoryToCategoryDTO(category);
-
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        return this.categoryMapper.categoryToCategoryDTO(category);
     }
 
     @Override
-    public ResponseEntity<CategoryDTO> createCategory(CreateCategoryDTO category) {
+    public CategoryDTO createCategory(CreateCategoryDTO category) {
+        if (category.getName() != null && (category.getName().startsWith(" ") || category.getName().endsWith(" "))) {
+            throw new APIException("El nombre de la categoría no puede empezar o terminar con espacios");
+        }
+
         this.categoryRepository.findByNameIgnoreCaseAndStatus(category.getName(), EntityStatus.ACTIVE)
                 .ifPresent(existingCategory -> {
                     throw new APIException("La categoría ya existe");
@@ -63,25 +75,28 @@ public class CategoryService implements ICategoryService {
 
         entity = this.categoryRepository.save(entity);
 
-        CategoryDTO dto = this.categoryMapper.categoryToCategoryDTO(entity);
-
-        return new ResponseEntity<>(dto, HttpStatus.CREATED);
+        return this.categoryMapper.categoryToCategoryDTO(entity);
     }
 
     @Override
-    public ResponseEntity<CategoryDTO> updateCategory(Long id, UpdateCategoryDTO category) {
-        Category entity = this.categoryMapper.categoryDTOToCategory(this.getCategoryById(id).getBody());
+    public CategoryDTO updateCategory(Long id, UpdateCategoryDTO category) {
+        Category entity = this.categoryRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría", "id", id));
 
         if (category.isEmpty()) {
             throw new APIException("No se han enviado datos para actualizar");
         }
 
-        this.categoryRepository.findByNameIgnoreCaseAndStatusAndIdNot(category.getName(), EntityStatus.ACTIVE, id)
-                .ifPresent(existingCategory -> {
-                    throw new APIException("La categoría ya existe");
-                });
-
         if (category.getName() != null) {
+            if (category.getName().startsWith(" ") || category.getName().endsWith(" ")) {
+                throw new APIException("El nombre de la categoría no puede empezar o terminar con espacios");
+            }
+
+            this.categoryRepository.findByNameIgnoreCaseAndStatusAndIdNot(category.getName(), EntityStatus.ACTIVE, id)
+                    .ifPresent(existingCategory -> {
+                        throw new APIException("La categoría ya existe");
+                    });
+
             entity.setName(category.getName());
         }
 
@@ -91,9 +106,7 @@ public class CategoryService implements ICategoryService {
 
         entity = this.categoryRepository.save(entity);
 
-        CategoryDTO dto = this.categoryMapper.categoryToCategoryDTO(entity);
-
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        return this.categoryMapper.categoryToCategoryDTO(entity);
     }
 
     @Override

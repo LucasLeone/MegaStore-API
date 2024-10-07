@@ -3,6 +3,7 @@ package grupo11.megastore.products.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,26 +28,37 @@ public class CategoryController {
 
     @GetMapping
     public ResponseEntity<List<CategoryDTO>> getAllCategories() {
-        return this.categoryService.getAllCategories();
+        List<CategoryDTO> categories = this.categoryService.getAllCategories();
+        return new ResponseEntity<>(categories, HttpStatus.OK);
+    }
+
+    @GetMapping("/deleted")
+    public ResponseEntity<List<CategoryDTO>> getAllDeletedCategories() {
+        List<CategoryDTO> categories = this.categoryService.getAllDeletedCategories();
+        return new ResponseEntity<>(categories, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
-        return this.categoryService.getCategoryById(id);
+        CategoryDTO category = this.categoryService.getCategoryById(id);
+        return new ResponseEntity<>(category, HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<CategoryDTO> createCategory(@Valid @RequestBody CreateCategoryDTO body) {
-        return this.categoryService.createCategory(body);
+        CategoryDTO category = this.categoryService.createCategory(body);
+        return new ResponseEntity<>(category, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id, @Valid @RequestBody UpdateCategoryDTO body) {
-        return this.categoryService.updateCategory(id, body);
+        CategoryDTO category = this.categoryService.updateCategory(id, body);
+        return new ResponseEntity<>(category, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteCategory(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         this.categoryService.deleteCategory(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

@@ -8,32 +8,53 @@ import java.util.List;
 
 public interface IBrandService {
     /**
-     * Obtener todas las marcas
+     * Get all brands
+     * 
+     * @return
      */
     public List<BrandDTO> getAllBrands();
 
     /**
-     * Obtener todas las marcas eliminadas
+     * Get all deleted brands
+     * 
+     * @return
      */
     public List<BrandDTO> getAllDeletedBrands();
 
     /**
-     * Obtener una marca por ID
+     * Get a brand by id
+     * 
+     * @param id
+     * 
+     * @return
      */
     public BrandDTO getBrandById(Long id);
 
     /**
-     * Crear una nueva marca
+     * Create a new brand
+     * 
+     * @param brand
+     * 
+     * @return
      */
     public BrandDTO createBrand(CreateBrandDTO brand);
 
     /**
-     * Actualizar una marca
+     * Update a brand
+     * 
+     * @param id
+     * @param brand
+     * 
+     * @return
      */
     public BrandDTO updateBrand(Long id, UpdateBrandDTO brand);
 
     /**
-     * Eliminar una marca
+     * Delete a brand
+     * 
+     * @param id
+     * 
+     * @return
      */
     public void deleteBrand(Long id);
 }
