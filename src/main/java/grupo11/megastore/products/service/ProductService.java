@@ -5,8 +5,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import grupo11.megastore.constant.EntityStatus;
@@ -46,8 +44,7 @@ public class ProductService implements IProductService {
     private IProductMapper productMapper;
 
     @Override
-    public ResponseEntity<List<ProductDTO>> getAllProducts(Long categoryId, Long subcategoryId, Long brandId,
-            String name) {
+    public List<ProductDTO> getAllProducts(Long categoryId, Long subcategoryId, Long brandId, String name) {
         Specification<Product> spec = Specification.where(ProductSpecification.hasStatus(EntityStatus.ACTIVE))
                 .and(ProductSpecification.hasCategoryId(categoryId))
                 .and(ProductSpecification.hasSubcategoryId(subcategoryId))
@@ -61,21 +58,37 @@ public class ProductService implements IProductService {
             dtos.add(productMapper.productToProductDTO(product));
         });
 
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
+        return dtos;
     }
 
     @Override
-    public ResponseEntity<ProductDTO> getProductById(Long id) {
+    public List<ProductDTO> getAllDeletedProducts() {
+        List<Product> products = this.productRepository.findByStatus(EntityStatus.DELETED);
+
+        List<ProductDTO> dtos = new ArrayList<>();
+        products.forEach(product -> {
+            dtos.add(productMapper.productToProductDTO(product));
+        });
+
+        return dtos;
+    }
+
+    @Override
+    public ProductDTO getProductById(Long id) {
         Product product = this.productRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", id));
 
-        ProductDTO dto = this.productMapper.productToProductDTO(product);
-
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        return this.productMapper.productToProductDTO(product);
     }
 
     @Override
-    public ResponseEntity<ProductDTO> createProduct(CreateProductDTO product) {
+    public ProductDTO createProduct(CreateProductDTO product) {
+        // Validar que el nombre no comience ni termine con espacios
+        if (product.getName() != null && (product.getName().startsWith(" ") || product.getName().endsWith(" "))) {
+            throw new APIException("El nombre del producto no puede empezar o terminar con espacios");
+        }
+
+        // Validación para evitar duplicados
         this.productRepository.findByNameIgnoreCaseAndStatus(product.getName(), EntityStatus.ACTIVE)
                 .ifPresent(existingProduct -> {
                     throw new APIException("El producto ya existe");
@@ -101,25 +114,30 @@ public class ProductService implements IProductService {
 
         entity = this.productRepository.save(entity);
 
-        ProductDTO dto = this.productMapper.productToProductDTO(entity);
-
-        return new ResponseEntity<>(dto, HttpStatus.CREATED);
+        return this.productMapper.productToProductDTO(entity);
     }
 
     @Override
-    public ResponseEntity<ProductDTO> updateProduct(Long id, UpdateProductDTO product) {
-        Product entity = this.productMapper.productDTOToProduct(this.getProductById(id).getBody());
+    public ProductDTO updateProduct(Long id, UpdateProductDTO product) {
+        Product entity = this.productRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", id));
 
         if (product.isEmpty()) {
             throw new APIException("No se han enviado datos para actualizar");
         }
 
-        this.productRepository.findByNameIgnoreCaseAndStatusAndIdNot(product.getName(), EntityStatus.ACTIVE, id)
-                .ifPresent(existingProduct -> {
-                    throw new APIException("El producto ya existe");
-                });
-
         if (product.getName() != null) {
+            // Validar que el nombre no comience ni termine con espacios
+            if (product.getName().startsWith(" ") || product.getName().endsWith(" ")) {
+                throw new APIException("El nombre del producto no puede empezar o terminar con espacios");
+            }
+
+            // Validación para evitar duplicados
+            this.productRepository.findByNameIgnoreCaseAndStatusAndIdNot(product.getName(), EntityStatus.ACTIVE, id)
+                    .ifPresent(existingProduct -> {
+                        throw new APIException("El producto ya existe");
+                    });
+
             entity.setName(product.getName());
         }
 
@@ -155,9 +173,7 @@ public class ProductService implements IProductService {
 
         entity = this.productRepository.save(entity);
 
-        ProductDTO dto = this.productMapper.productToProductDTO(entity);
-
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        return this.productMapper.productToProductDTO(entity);
     }
 
     @Override

@@ -1,7 +1,5 @@
 package grupo11.megastore.products.interfaces;
 
-import org.springframework.http.ResponseEntity;
-
 import grupo11.megastore.products.dto.product.ProductDTO;
 import grupo11.megastore.products.dto.product.CreateProductDTO;
 import grupo11.megastore.products.dto.product.UpdateProductDTO;
@@ -10,52 +8,52 @@ import java.util.List;
 
 /**
  * Service interface for managing Product entities.
- * Defines methods for CRUD operations and other business logic related to
- * products.
+ * Defines methods for CRUD operations and other business logic related to products.
  */
 public interface IProductService {
 
     /**
-     * Retrieves all products with optional filters.
+     * Retrieves all active products with optional filters.
      *
      * @param categoryId    (Optional) The ID of the category to filter by.
      * @param subcategoryId (Optional) The ID of the subcategory to filter by.
      * @param brandId       (Optional) The ID of the brand to filter by.
-     * @param name          (Optional) A string to filter products by name
-     *                      containing this value.
-     * @return A ResponseEntity containing a list of ProductDTO objects.
+     * @param name          (Optional) A string to filter products by name containing this value.
+     * @return A list of ProductDTO objects.
      */
-    ResponseEntity<List<ProductDTO>> getAllProducts(Long categoryId, Long subcategoryId, Long brandId, String name);
+    List<ProductDTO> getAllProducts(Long categoryId, Long subcategoryId, Long brandId, String name);
+
+    /**
+     * Retrieves all deleted products.
+     *
+     * @return A list of ProductDTO objects.
+     */
+    List<ProductDTO> getAllDeletedProducts();
 
     /**
      * Retrieves a specific product by its unique identifier.
      *
      * @param id The unique identifier of the product to retrieve.
-     * @return A ResponseEntity containing the ProductDTO if found, or an
-     *         appropriate HTTP status otherwise.
+     * @return The ProductDTO if found.
      */
-    ResponseEntity<ProductDTO> getProductById(Long id);
+    ProductDTO getProductById(Long id);
 
     /**
      * Creates a new product.
      *
-     * @param product The CreateProductDTO containing the details of the product to
-     *                be created.
-     * @return A ResponseEntity containing the created ProductDTO along with an
-     *         appropriate HTTP status.
+     * @param product The CreateProductDTO containing the details of the product to be created.
+     * @return The created ProductDTO.
      */
-    ResponseEntity<ProductDTO> createProduct(CreateProductDTO product);
+    ProductDTO createProduct(CreateProductDTO product);
 
     /**
      * Updates an existing product.
      *
      * @param id      The unique identifier of the product to update.
-     * @param product The UpdateProductDTO containing the updated details of the
-     *                product.
-     * @return A ResponseEntity containing the updated ProductDTO if the update is
-     *         successful, or an appropriate HTTP status otherwise.
+     * @param product The UpdateProductDTO containing the updated details of the product.
+     * @return The updated ProductDTO.
      */
-    ResponseEntity<ProductDTO> updateProduct(Long id, UpdateProductDTO product);
+    ProductDTO updateProduct(Long id, UpdateProductDTO product);
 
     /**
      * Deletes a product by marking its status as DELETED.

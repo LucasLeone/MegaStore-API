@@ -1,0 +1,22 @@
+meta {
+  name: List deleted products
+  type: http
+  seq: 6
+}
+
+get {
+  url: http://localhost:8080/products/deleted
+  body: none
+  auth: none
+}
+
+params:query {
+  ~name: test
+  ~categoryId: 2
+  ~subcategoryId: 9
+  ~brandId: 1
+}
+
+headers {
+  Authorization: Bearer {{Token}}
+}
