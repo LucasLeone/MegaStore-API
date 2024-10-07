@@ -1,15 +1,9 @@
 package grupo11.megastore.products.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import grupo11.megastore.products.interfaces.IBrandService;
 import jakarta.validation.Valid;
@@ -27,26 +21,37 @@ public class BrandController {
 
     @GetMapping
     public ResponseEntity<List<BrandDTO>> getAllBrands() {
-        return this.brandService.getAllBrands();
+        List<BrandDTO> brands = this.brandService.getAllBrands();
+        return new ResponseEntity<>(brands, HttpStatus.OK);
+    }
+
+    @GetMapping("/deleted")
+    public ResponseEntity<List<BrandDTO>> getAllDeletedBrands() {
+        List<BrandDTO> brands = this.brandService.getAllDeletedBrands();
+        return new ResponseEntity<>(brands, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<BrandDTO> getBrandById(@PathVariable Long id) {
-        return this.brandService.getBrandById(id);
+        BrandDTO dto = this.brandService.getBrandById(id);
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<BrandDTO> createBrand(@Valid @RequestBody CreateBrandDTO body) {
-        return this.brandService.createBrand(body);
+        BrandDTO dto = this.brandService.createBrand(body);
+        return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<BrandDTO> updateBrand(@PathVariable Long id, @Valid @RequestBody UpdateBrandDTO body) {
-        return this.brandService.updateBrand(id, body);
+        BrandDTO dto = this.brandService.updateBrand(id, body);
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteBrand(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteBrand(@PathVariable Long id) {
         this.brandService.deleteBrand(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

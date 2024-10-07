@@ -1,7 +1,5 @@
 package grupo11.megastore.products.interfaces;
 
-import org.springframework.http.ResponseEntity;
-
 import grupo11.megastore.products.dto.brand.BrandDTO;
 import grupo11.megastore.products.dto.brand.CreateBrandDTO;
 import grupo11.megastore.products.dto.brand.UpdateBrandDTO;
@@ -10,48 +8,32 @@ import java.util.List;
 
 public interface IBrandService {
     /**
-     * Get all brands
-     * 
-     * @return
+     * Obtener todas las marcas
      */
-    public ResponseEntity<List<BrandDTO>> getAllBrands();
-
+    public List<BrandDTO> getAllBrands();
 
     /**
-     * Get a brand by id
-     * 
-     * @param id
-     * 
-     * @return
+     * Obtener todas las marcas eliminadas
      */
-    public ResponseEntity<BrandDTO> getBrandById(Long id);
-
+    public List<BrandDTO> getAllDeletedBrands();
 
     /**
-     * Create a new brand
-     * 
-     * @param brand
-     * 
-     * @return
+     * Obtener una marca por ID
      */
-    public ResponseEntity<BrandDTO> createBrand(CreateBrandDTO brand);
+    public BrandDTO getBrandById(Long id);
 
     /**
-     * Update a brand
-     * 
-     * @param id
-     * @param brand
-     * 
-     * @return
+     * Crear una nueva marca
      */
-    public ResponseEntity<BrandDTO> updateBrand(Long id, UpdateBrandDTO brand);
+    public BrandDTO createBrand(CreateBrandDTO brand);
 
     /**
-     * Delete a brand
-     * 
-     * @param id
-     * 
-     * @return
+     * Actualizar una marca
+     */
+    public BrandDTO updateBrand(Long id, UpdateBrandDTO brand);
+
+    /**
+     * Eliminar una marca
      */
     public void deleteBrand(Long id);
 }
