@@ -36,7 +36,7 @@ public class VariantService implements IVariantService {
     private IVariantMapper variantMapper;
 
     @Override
-    public ResponseEntity<List<VariantDTO>> getAllVariants(Long productId, String color, String size) {
+    public List<VariantDTO> getAllVariants(Long productId, String color, String size) {
         Specification<Variant> spec = Specification.where(VariantSpecification.hasStatus(EntityStatus.ACTIVE))
                 .and(VariantSpecification.hasProductId(productId))
                 .and(VariantSpecification.colorContains(color))
@@ -49,26 +49,43 @@ public class VariantService implements IVariantService {
             dtos.add(variantMapper.variantToVariantDTO(variant));
         });
 
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
+        return dtos;
     }
 
     @Override
-    public ResponseEntity<VariantDTO> getVariantById(Long id) {
+    public List<VariantDTO> getAllDeletedVariants() {
+        List<Variant> variants = this.variantRepository.findByStatus(EntityStatus.DELETED);
+
+        List<VariantDTO> dtos = new ArrayList<>();
+        variants.forEach(variant -> {
+            dtos.add(this.variantMapper.variantToVariantDTO(variant));
+        });
+
+        return dtos;
+    }
+
+    @Override
+    public VariantDTO getVariantById(Long id) {
         Variant variant = this.variantRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Variante", "id", id));
 
-        VariantDTO dto = this.variantMapper.variantToVariantDTO(variant);
-
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        return this.variantMapper.variantToVariantDTO(variant);
     }
 
     @Override
-    public ResponseEntity<VariantDTO> createVariant(CreateVariantDTO variant) {
-        this.variantRepository.findByProductIdAndColorAndSizeAndStatus(variant.getProductId(), variant.getColor(),
-                variant.getSize(), EntityStatus.ACTIVE)
-                .ifPresent(existingVariant -> {
-                    throw new APIException("La variante ya existe");
-                });
+    public VariantDTO createVariant(CreateVariantDTO variant) {
+        // Validar que color y tamaño no comiencen ni terminen con espacios
+        if ((variant.getColor() != null && (variant.getColor().startsWith(" ") || variant.getColor().endsWith(" "))) ||
+            (variant.getSize() != null && (variant.getSize().startsWith(" ") || variant.getSize().endsWith(" ")))) {
+            throw new APIException("El color y el tamaño no pueden empezar o terminar con espacios");
+        }
+
+        // Validación para evitar duplicados
+        this.variantRepository.findByProductIdAndColorAndSizeAndStatus(
+                variant.getProductId(), variant.getColor(), variant.getSize(), EntityStatus.ACTIVE)
+            .ifPresent(existingVariant -> {
+                throw new APIException("La variante ya existe");
+            });
 
         Product product = this.productRepository.findByIdAndStatus(variant.getProductId(), EntityStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", variant.getProductId()));
@@ -82,24 +99,38 @@ public class VariantService implements IVariantService {
 
         entity = this.variantRepository.save(entity);
 
-        VariantDTO dto = this.variantMapper.variantToVariantDTO(entity);
-
-        return new ResponseEntity<>(dto, HttpStatus.CREATED);
+        return this.variantMapper.variantToVariantDTO(entity);
     }
 
     @Override
-    public ResponseEntity<VariantDTO> updateVariant(Long id, UpdateVariantDTO variant) {
-        Variant entity = this.variantMapper.variantDTOToVariant(this.getVariantById(id).getBody());
+    public VariantDTO updateVariant(Long id, UpdateVariantDTO variant) {
+        Variant entity = this.variantRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Variante", "id", id));
 
         if (variant.isEmpty()) {
             throw new APIException("No se han enviado datos para actualizar");
         }
 
-        this.variantRepository.findByProductIdAndColorAndSizeAndStatusAndIdNot(variant.getProductId(), variant.getColor(),
-                variant.getSize(), EntityStatus.ACTIVE, id)
+        if (variant.getColor() != null && (variant.getColor().startsWith(" ") || variant.getColor().endsWith(" "))) {
+            throw new APIException("El color no puede empezar o terminar con espacios");
+        }
+
+        if (variant.getSize() != null && (variant.getSize().startsWith(" ") || variant.getSize().endsWith(" "))) {
+            throw new APIException("El tamaño no puede empezar o terminar con espacios");
+        }
+
+        // Validación para evitar duplicados
+        if (variant.getProductId() != null || variant.getColor() != null || variant.getSize() != null) {
+            Long productId = variant.getProductId() != null ? variant.getProductId() : entity.getProduct().getId();
+            String color = variant.getColor() != null ? variant.getColor() : entity.getColor();
+            String size = variant.getSize() != null ? variant.getSize() : entity.getSize();
+
+            this.variantRepository.findByProductIdAndColorAndSizeAndStatusAndIdNot(
+                    productId, color, size, EntityStatus.ACTIVE, id)
                 .ifPresent(existingVariant -> {
                     throw new APIException("La variante ya existe");
                 });
+        }
 
         if (variant.getProductId() != null) {
             Product product = this.productRepository.findByIdAndStatus(variant.getProductId(), EntityStatus.ACTIVE)
@@ -126,9 +157,7 @@ public class VariantService implements IVariantService {
 
         entity = this.variantRepository.save(entity);
 
-        VariantDTO dto = this.variantMapper.variantToVariantDTO(entity);
-
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        return this.variantMapper.variantToVariantDTO(entity);
     }
 
     @Override

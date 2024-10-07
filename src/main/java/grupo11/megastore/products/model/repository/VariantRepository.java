@@ -100,4 +100,6 @@ public interface VariantRepository extends JpaRepository<Variant, Long>, JpaSpec
      * @return       Una lista de variantes que contienen la cadena especificada en su tamaño y que coinciden con el estado.
      */
     List<Variant> findBySizeContainingAndStatus(String size, EntityStatus status);
+
+    List<Variant> findByStatus(EntityStatus status);
 }

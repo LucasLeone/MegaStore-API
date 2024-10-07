@@ -3,6 +3,7 @@ package grupo11.megastore.products.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,26 +34,37 @@ public class VariantController {
         @RequestParam(required = false) String color,
         @RequestParam(required = false) String size
     ) {
-        return this.variantService.getAllVariants(productId, color, size);
+        List<VariantDTO> variants = this.variantService.getAllVariants(productId, color, size);
+        return new ResponseEntity<>(variants, HttpStatus.OK);
+    }
+
+    @GetMapping("/deleted")
+    public ResponseEntity<List<VariantDTO>> getAllDeletedVariants() {
+        List<VariantDTO> variants = this.variantService.getAllDeletedVariants();
+        return new ResponseEntity<>(variants, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<VariantDTO> getVariantById(@PathVariable Long id) {
-        return this.variantService.getVariantById(id);
+        VariantDTO variant = this.variantService.getVariantById(id);
+        return new ResponseEntity<>(variant, HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<VariantDTO> createVariant(@Valid @RequestBody CreateVariantDTO body) {
-        return this.variantService.createVariant(body);
+        VariantDTO variant = this.variantService.createVariant(body);
+        return new ResponseEntity<>(variant, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<VariantDTO> updateVariant(@PathVariable Long id, @Valid @RequestBody UpdateVariantDTO body) {
-        return this.variantService.updateVariant(id, body);
+        VariantDTO variant = this.variantService.updateVariant(id, body);
+        return new ResponseEntity<>(variant, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteVariant(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteVariant(@PathVariable Long id) {
         this.variantService.deleteVariant(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
