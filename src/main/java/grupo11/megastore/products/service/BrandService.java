@@ -69,6 +69,11 @@ public class BrandService implements IBrandService {
                     throw new APIException("La marca ya existe");
                 });
 
+        this.brandRepository.findByNameIgnoreCaseAndStatus(brand.getName(), EntityStatus.DELETED)
+                .ifPresent(existingBrand -> {
+                    throw new APIException("La marca ya existe pero esta eliminada");
+                });
+
         Brand entity = new Brand();
         entity.setName(brand.getName());
         entity.setDescription(brand.getDescription());
@@ -95,6 +100,11 @@ public class BrandService implements IBrandService {
             this.brandRepository.findByNameIgnoreCaseAndStatusAndIdNot(brand.getName(), EntityStatus.ACTIVE, id)
                     .ifPresent(existingBrand -> {
                         throw new APIException("La marca ya existe");
+                    });
+
+            this.brandRepository.findByNameIgnoreCaseAndStatus(brand.getName(), EntityStatus.DELETED)
+                    .ifPresent(existingBrand -> {
+                        throw new APIException("La marca ya existe pero esta eliminada");
                     });
 
             entity.setName(brand.getName());

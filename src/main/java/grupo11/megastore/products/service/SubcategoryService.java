@@ -74,13 +74,19 @@ public class SubcategoryService implements ISubcategoryService {
 
     @Override
     public SubcategoryDTO createSubcategory(CreateSubcategoryDTO subcategory) {
-        if (subcategory.getName() != null && (subcategory.getName().startsWith(" ") || subcategory.getName().endsWith(" "))) {
+        if (subcategory.getName() != null
+                && (subcategory.getName().startsWith(" ") || subcategory.getName().endsWith(" "))) {
             throw new APIException("El nombre de la subcategoría no puede empezar o terminar con espacios");
         }
 
         this.subcategoryRepository.findByNameIgnoreCaseAndStatus(subcategory.getName(), EntityStatus.ACTIVE)
                 .ifPresent(existingSubcategory -> {
                     throw new APIException("La subcategoría ya existe");
+                });
+
+        this.subcategoryRepository.findByNameIgnoreCaseAndStatus(subcategory.getName(), EntityStatus.DELETED)
+                .ifPresent(existingSubcategory -> {
+                    throw new APIException("La subcategoría ya existe pero esta eliminada");
                 });
 
         Category category = this.categoryRepository.findByIdAndStatus(subcategory.getCategoryId(), EntityStatus.ACTIVE)
@@ -110,9 +116,15 @@ public class SubcategoryService implements ISubcategoryService {
                 throw new APIException("El nombre de la subcategoría no puede empezar o terminar con espacios");
             }
 
-            this.subcategoryRepository.findByNameIgnoreCaseAndStatusAndIdNot(subcategory.getName(), EntityStatus.ACTIVE, id)
+            this.subcategoryRepository
+                    .findByNameIgnoreCaseAndStatusAndIdNot(subcategory.getName(), EntityStatus.ACTIVE, id)
                     .ifPresent(existingSubcategory -> {
                         throw new APIException("La subcategoría ya existe");
+                    });
+
+            this.subcategoryRepository.findByNameIgnoreCaseAndStatus(subcategory.getName(), EntityStatus.DELETED)
+                    .ifPresent(existingSubcategory -> {
+                        throw new APIException("La subcategoría ya existe pero esta eliminada");
                     });
 
             entity.setName(subcategory.getName());

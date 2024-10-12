@@ -83,15 +83,18 @@ public class ProductService implements IProductService {
 
     @Override
     public ProductDTO createProduct(CreateProductDTO product) {
-        // Validar que el nombre no comience ni termine con espacios
         if (product.getName() != null && (product.getName().startsWith(" ") || product.getName().endsWith(" "))) {
             throw new APIException("El nombre del producto no puede empezar o terminar con espacios");
         }
 
-        // Validación para evitar duplicados
         this.productRepository.findByNameIgnoreCaseAndStatus(product.getName(), EntityStatus.ACTIVE)
                 .ifPresent(existingProduct -> {
                     throw new APIException("El producto ya existe");
+                });
+
+        this.productRepository.findByNameIgnoreCaseAndStatus(product.getName(), EntityStatus.DELETED)
+                .ifPresent(existingProduct -> {
+                    throw new APIException("El producto ya existe pero esta eliminado");
                 });
 
         Category category = this.categoryRepository.findByIdAndStatus(product.getCategoryId(), EntityStatus.ACTIVE)
@@ -127,15 +130,18 @@ public class ProductService implements IProductService {
         }
 
         if (product.getName() != null) {
-            // Validar que el nombre no comience ni termine con espacios
             if (product.getName().startsWith(" ") || product.getName().endsWith(" ")) {
                 throw new APIException("El nombre del producto no puede empezar o terminar con espacios");
             }
 
-            // Validación para evitar duplicados
             this.productRepository.findByNameIgnoreCaseAndStatusAndIdNot(product.getName(), EntityStatus.ACTIVE, id)
                     .ifPresent(existingProduct -> {
                         throw new APIException("El producto ya existe");
+                    });
+
+            this.productRepository.findByNameIgnoreCaseAndStatus(product.getName(), EntityStatus.DELETED)
+                    .ifPresent(existingProduct -> {
+                        throw new APIException("El producto ya existe pero esta eliminado");
                     });
 
             entity.setName(product.getName());

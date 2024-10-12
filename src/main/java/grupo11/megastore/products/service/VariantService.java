@@ -5,8 +5,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import grupo11.megastore.constant.EntityStatus;
@@ -74,18 +72,22 @@ public class VariantService implements IVariantService {
 
     @Override
     public VariantDTO createVariant(CreateVariantDTO variant) {
-        // Validar que color y tamaño no comiencen ni terminen con espacios
         if ((variant.getColor() != null && (variant.getColor().startsWith(" ") || variant.getColor().endsWith(" "))) ||
-            (variant.getSize() != null && (variant.getSize().startsWith(" ") || variant.getSize().endsWith(" ")))) {
+                (variant.getSize() != null && (variant.getSize().startsWith(" ") || variant.getSize().endsWith(" ")))) {
             throw new APIException("El color y el tamaño no pueden empezar o terminar con espacios");
         }
 
-        // Validación para evitar duplicados
         this.variantRepository.findByProductIdAndColorAndSizeAndStatus(
                 variant.getProductId(), variant.getColor(), variant.getSize(), EntityStatus.ACTIVE)
-            .ifPresent(existingVariant -> {
-                throw new APIException("La variante ya existe");
-            });
+                .ifPresent(existingVariant -> {
+                    throw new APIException("La variante ya existe");
+                });
+
+        this.variantRepository.findByProductIdAndColorAndSizeAndStatus(
+                variant.getProductId(), variant.getColor(), variant.getSize(), EntityStatus.DELETED)
+                .ifPresent(existingVariant -> {
+                    throw new APIException("La variante ya existe pero esta eliminada");
+                });
 
         Product product = this.productRepository.findByIdAndStatus(variant.getProductId(), EntityStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", variant.getProductId()));
@@ -119,7 +121,6 @@ public class VariantService implements IVariantService {
             throw new APIException("El tamaño no puede empezar o terminar con espacios");
         }
 
-        // Validación para evitar duplicados
         if (variant.getProductId() != null || variant.getColor() != null || variant.getSize() != null) {
             Long productId = variant.getProductId() != null ? variant.getProductId() : entity.getProduct().getId();
             String color = variant.getColor() != null ? variant.getColor() : entity.getColor();
@@ -127,9 +128,15 @@ public class VariantService implements IVariantService {
 
             this.variantRepository.findByProductIdAndColorAndSizeAndStatusAndIdNot(
                     productId, color, size, EntityStatus.ACTIVE, id)
-                .ifPresent(existingVariant -> {
-                    throw new APIException("La variante ya existe");
-                });
+                    .ifPresent(existingVariant -> {
+                        throw new APIException("La variante ya existe");
+                    });
+
+            this.variantRepository.findByProductIdAndColorAndSizeAndStatus(
+                    variant.getProductId(), variant.getColor(), variant.getSize(), EntityStatus.DELETED)
+                    .ifPresent(existingVariant -> {
+                        throw new APIException("La variante ya existe pero esta eliminada");
+                    });
         }
 
         if (variant.getProductId() != null) {

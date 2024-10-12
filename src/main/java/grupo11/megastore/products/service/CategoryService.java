@@ -69,6 +69,11 @@ public class CategoryService implements ICategoryService {
                     throw new APIException("La categoría ya existe");
                 });
 
+        this.categoryRepository.findByNameIgnoreCaseAndStatus(category.getName(), EntityStatus.DELETED)
+                .ifPresent(existingCategory -> {
+                    throw new APIException("La categoría ya existe pero esta eliminada");
+                });
+
         Category entity = new Category();
         entity.setName(category.getName());
         entity.setDescription(category.getDescription());
@@ -95,6 +100,11 @@ public class CategoryService implements ICategoryService {
             this.categoryRepository.findByNameIgnoreCaseAndStatusAndIdNot(category.getName(), EntityStatus.ACTIVE, id)
                     .ifPresent(existingCategory -> {
                         throw new APIException("La categoría ya existe");
+                    });
+
+            this.categoryRepository.findByNameIgnoreCaseAndStatus(category.getName(), EntityStatus.DELETED)
+                    .ifPresent(existingCategory -> {
+                        throw new APIException("La categoría ya existe pero esta eliminada");
                     });
 
             entity.setName(category.getName());
