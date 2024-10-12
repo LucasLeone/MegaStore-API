@@ -12,7 +12,7 @@ public interface ICategoryService {
      * 
      * @return
      */
-    public List<CategoryDTO> getAllCategories();
+    List<CategoryDTO> getAllCategories();
 
 
     /**
@@ -20,7 +20,7 @@ public interface ICategoryService {
      * 
      * @return
      */
-    public List<CategoryDTO> getAllDeletedCategories();
+    List<CategoryDTO> getAllDeletedCategories();
 
     /**
      * Get a category by id
@@ -29,7 +29,7 @@ public interface ICategoryService {
      * 
      * @return
      */
-    public CategoryDTO getCategoryById(Long id);
+    CategoryDTO getCategoryById(Long id);
 
     /**
      * Create a new category
@@ -38,7 +38,7 @@ public interface ICategoryService {
      * 
      * @return
      */
-    public CategoryDTO createCategory(CreateCategoryDTO category);
+    CategoryDTO createCategory(CreateCategoryDTO category);
 
     /**
      * Update a category
@@ -48,7 +48,7 @@ public interface ICategoryService {
      * 
      * @return
      */
-    public CategoryDTO updateCategory(Long id, UpdateCategoryDTO category);
+    CategoryDTO updateCategory(Long id, UpdateCategoryDTO category);
 
     /**
      * Delete a category
@@ -57,5 +57,14 @@ public interface ICategoryService {
      * 
      * @return
      */
-    public void deleteCategory(Long id);
+    void deleteCategory(Long id);
+
+    /**
+     * Restore a category
+     * 
+     * @param id
+     * 
+     * @return
+     */
+    void restoreCategory(Long id);
 }

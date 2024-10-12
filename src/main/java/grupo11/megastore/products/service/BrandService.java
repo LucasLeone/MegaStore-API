@@ -118,4 +118,14 @@ public class BrandService implements IBrandService {
 
         this.brandRepository.save(entity);
     }
+
+    @Override
+    public void restoreBrand(Long id) {
+        Brand entity = this.brandRepository.findByIdAndStatus(id, EntityStatus.DELETED)
+                .orElseThrow(() -> new ResourceNotFoundException("Marca", "id", id));
+
+        entity.restore();
+
+        this.brandRepository.save(entity);
+    }
 }

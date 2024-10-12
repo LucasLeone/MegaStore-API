@@ -56,4 +56,10 @@ public class SubcategoryController {
         this.subcategoryService.deleteSubcategory(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreSubcategory(@PathVariable Long id) {
+        this.subcategoryService.restoreSubcategory(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

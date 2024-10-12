@@ -61,4 +61,13 @@ public interface IVariantService {
      * @return
      */
     void deleteVariant(Long id);
+
+    /**
+     * Restore a variant
+     * 
+     * @param id
+     * 
+     * @return
+     */
+    void restoreVariant(Long id);
 }

@@ -12,14 +12,14 @@ public interface IBrandService {
      * 
      * @return
      */
-    public List<BrandDTO> getAllBrands();
+    List<BrandDTO> getAllBrands();
 
     /**
      * Get all deleted brands
      * 
      * @return
      */
-    public List<BrandDTO> getAllDeletedBrands();
+    List<BrandDTO> getAllDeletedBrands();
 
     /**
      * Get a brand by id
@@ -28,7 +28,7 @@ public interface IBrandService {
      * 
      * @return
      */
-    public BrandDTO getBrandById(Long id);
+    BrandDTO getBrandById(Long id);
 
     /**
      * Create a new brand
@@ -37,7 +37,7 @@ public interface IBrandService {
      * 
      * @return
      */
-    public BrandDTO createBrand(CreateBrandDTO brand);
+    BrandDTO createBrand(CreateBrandDTO brand);
 
     /**
      * Update a brand
@@ -47,7 +47,7 @@ public interface IBrandService {
      * 
      * @return
      */
-    public BrandDTO updateBrand(Long id, UpdateBrandDTO brand);
+    BrandDTO updateBrand(Long id, UpdateBrandDTO brand);
 
     /**
      * Delete a brand
@@ -56,5 +56,14 @@ public interface IBrandService {
      * 
      * @return
      */
-    public void deleteBrand(Long id);
+    void deleteBrand(Long id);
+
+    /**
+     * Restore a brand
+     * 
+     * @param id
+     * 
+     * @return
+     */
+    void restoreBrand(Long id);
 }

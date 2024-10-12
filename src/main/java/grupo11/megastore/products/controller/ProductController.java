@@ -64,6 +64,6 @@ public class ProductController {
     @PostMapping("/{id}/restore")
     public ResponseEntity<Void> restoreProduct(@PathVariable Long id) {
         this.productService.restoreProduct(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

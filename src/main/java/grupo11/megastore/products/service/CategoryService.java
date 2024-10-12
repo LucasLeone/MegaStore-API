@@ -118,4 +118,14 @@ public class CategoryService implements ICategoryService {
 
         this.categoryRepository.save(entity);
     }
+
+    @Override
+    public void restoreCategory(Long id) {
+        Category entity = this.categoryRepository.findByIdAndStatus(id, EntityStatus.DELETED)
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría", "id", id));
+
+        entity.restore();
+
+        this.categoryRepository.save(entity);
+    }
 }

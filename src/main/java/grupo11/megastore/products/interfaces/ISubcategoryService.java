@@ -18,14 +18,14 @@ public interface ISubcategoryService {
      * @param categoryId (Opcional) The ID of the category to filter subcategories.
      * @return A list of SubcategoryDTO objects.
      */
-    public List<SubcategoryDTO> getAllSubcategories(Long categoryId);
+    List<SubcategoryDTO> getAllSubcategories(Long categoryId);
 
     /**
      * Retrieves all deleted subcategories.
      *
      * @return A list of SubcategoryDTO objects.
      */
-    public List<SubcategoryDTO> getAllDeletedSubcategories();
+    List<SubcategoryDTO> getAllDeletedSubcategories();
 
     /**
      * Retrieves a specific subcategory by its unique identifier.
@@ -33,7 +33,7 @@ public interface ISubcategoryService {
      * @param id The unique identifier of the subcategory to retrieve.
      * @return The SubcategoryDTO if found.
      */
-    public SubcategoryDTO getSubcategoryById(Long id);
+    SubcategoryDTO getSubcategoryById(Long id);
 
     /**
      * Creates a new subcategory.
@@ -41,7 +41,7 @@ public interface ISubcategoryService {
      * @param subcategory The CreateSubcategoryDTO containing the details of the subcategory to be created.
      * @return The created SubcategoryDTO.
      */
-    public SubcategoryDTO createSubcategory(CreateSubcategoryDTO subcategory);
+    SubcategoryDTO createSubcategory(CreateSubcategoryDTO subcategory);
 
     /**
      * Updates an existing subcategory.
@@ -50,12 +50,19 @@ public interface ISubcategoryService {
      * @param subcategory The UpdateSubcategoryDTO containing the updated details of the subcategory.
      * @return The updated SubcategoryDTO.
      */
-    public SubcategoryDTO updateSubcategory(Long id, UpdateSubcategoryDTO subcategory);
+    SubcategoryDTO updateSubcategory(Long id, UpdateSubcategoryDTO subcategory);
 
     /**
      * Deletes a subcategory by marking its status as DELETED.
      *
      * @param id The unique identifier of the subcategory to delete.
      */
-    public void deleteSubcategory(Long id);
+    void deleteSubcategory(Long id);
+
+    /**
+     * Restores a deleted subcategory by marking its status as ACTIVE.
+     *
+     * @param id The unique identifier of the subcategory to restore.
+     */
+    void restoreSubcategory(Long id);
 }

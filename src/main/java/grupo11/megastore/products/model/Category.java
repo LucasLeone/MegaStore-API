@@ -32,4 +32,8 @@ public class Category {
     public void delete() {
         this.setStatus(EntityStatus.DELETED);;
     }
+    
+    public void restore() {
+        this.setStatus(EntityStatus.ACTIVE);
+    }
 }

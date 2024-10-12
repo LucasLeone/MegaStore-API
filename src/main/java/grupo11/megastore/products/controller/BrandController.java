@@ -54,4 +54,10 @@ public class BrandController {
         this.brandService.deleteBrand(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreBrand(@PathVariable Long id) {
+        this.brandService.restoreBrand(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

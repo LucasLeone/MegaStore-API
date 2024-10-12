@@ -169,4 +169,14 @@ public class VariantService implements IVariantService {
 
         this.variantRepository.save(entity);
     }
+
+    @Override
+    public void restoreVariant(Long id) {
+        Variant entity = this.variantRepository.findByIdAndStatus(id, EntityStatus.DELETED)
+                .orElseThrow(() -> new ResourceNotFoundException("Variante", "id", id));
+
+        entity.restore();
+
+        this.variantRepository.save(entity);
+    }
 }

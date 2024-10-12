@@ -144,4 +144,14 @@ public class SubcategoryService implements ISubcategoryService {
 
         this.subcategoryRepository.save(entity);
     }
+
+    @Override
+    public void restoreSubcategory(Long id) {
+        Subcategory entity = this.subcategoryRepository.findByIdAndStatus(id, EntityStatus.DELETED)
+                .orElseThrow(() -> new ResourceNotFoundException("Subcategoría", "id", id));
+
+        entity.restore();
+
+        this.subcategoryRepository.save(entity);
+    }
 }

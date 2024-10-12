@@ -61,4 +61,10 @@ public class CategoryController {
         this.categoryService.deleteCategory(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreCategory(@PathVariable Long id) {
+        this.categoryService.restoreCategory(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

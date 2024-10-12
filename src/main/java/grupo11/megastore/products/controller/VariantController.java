@@ -67,4 +67,10 @@ public class VariantController {
         this.variantService.deleteVariant(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreVariant(@PathVariable Long id) {
+        this.variantService.restoreVariant(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }
