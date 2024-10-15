@@ -32,6 +32,12 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getMyProfile() {
+        UserDTO user = this.userService.getMyProfile();
+        return ResponseEntity.ok(user);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDTO> createUser(@RequestBody CreateUserDTO body) {

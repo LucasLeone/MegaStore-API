@@ -78,6 +78,17 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public UserDTO getMyProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        User user = this.userRepository.findByEmailAndStatus(email, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "email", email));
+
+        return this.userMapper.userToUserDTO(user);
+    }
+
+    @Override
     public UserDTO registerUser(RegisterUserDTO body) {
         try {
             User user = this.userMapper.registerUserDTOToUser(body);
