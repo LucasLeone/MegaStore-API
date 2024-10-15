@@ -15,5 +15,6 @@ public interface IUserService {
     UserDTO registerUser(RegisterUserDTO body);
     UserDTO createUser(CreateUserDTO body);
     UserDTO updateUser(Long id, UpdateUserDTO user);
+    UserDTO updateSelfInfo(UpdateUserDTO user);
     void deleteUser(Long id);
 }

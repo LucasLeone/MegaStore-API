@@ -1,11 +1,11 @@
 meta {
-  name: Update self info
+  name: Update profile
   type: http
-  seq: 6
+  seq: 10
 }
 
 put {
-  url: http://localhost:8080/users/3
+  url: http://localhost:8080/users/me
   body: json
   auth: none
 }
@@ -14,7 +14,7 @@ body:json {
   {
     "first_name": "Lucas Agustin",
     "last_name": "Leone",
-    "phone_number": "3534817539",
+    "phone_number": "3534817538",
     "address": {
       "id": 3,
       "street": "25 de mayo",

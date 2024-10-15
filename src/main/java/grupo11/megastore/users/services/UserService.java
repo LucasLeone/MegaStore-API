@@ -214,6 +214,54 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public UserDTO updateSelfInfo(UpdateUserDTO body) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        User entity = this.userRepository.findByEmailAndStatus(email, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "email", email));
+
+        if (body.isEmpty()) {
+            throw new APIException("No hay datos para actualizar");
+        }
+
+        boolean updated = false;
+
+        if (body.getFirstName() != null) {
+            entity.setFirstName(body.getFirstName());
+            updated = true;
+        }
+
+        if (body.getLastName() != null) {
+            entity.setLastName(body.getLastName());
+            updated = true;
+        }
+
+        if (body.getPhoneNumber() != null) {
+            entity.setPhoneNumber(body.getPhoneNumber());
+            updated = true;
+        }
+
+        if (body.getAddress() != null) {
+            Address address = addressMapper.createAddressDTOToAddress(body.getAddress());
+            entity.setAddress(address);
+            updated = true;
+        }
+
+        if (!updated) {
+            throw new APIException("No hay datos válidos para actualizar");
+        }
+
+        try {
+            User updatedUser = this.userRepository.save(entity);
+            UserDTO dto = this.userMapper.userToUserDTO(updatedUser);
+            return dto;
+        } catch (DataIntegrityViolationException e) {
+            throw new APIException("Ya existe un usuario con ese email o número de teléfono");
+        }
+    }
+
+    @Override
     public void deleteUser(Long id) {
         User entity = this.userRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));

@@ -52,6 +52,12 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    @PutMapping("/me")
+    public ResponseEntity<UserDTO> updateSelfInfo(@RequestBody UpdateUserDTO body) {
+        UserDTO updatedUser = this.userService.updateSelfInfo(body);
+        return ResponseEntity.ok(updatedUser);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
