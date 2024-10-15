@@ -6,6 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import grupo11.megastore.carts.model.Cart;
 import grupo11.megastore.constant.EntityStatus;
 import grupo11.megastore.exception.APIException;
 import grupo11.megastore.exception.ResourceNotFoundException;
@@ -84,6 +85,10 @@ public class UserService implements IUserService {
             Role role = this.roleRepository.findByName("USER").get();
             user.getRoles().add(role);
 
+            Cart cart = new Cart();
+            cart.setUser(user);
+            user.setCart(cart);
+
             User registeredUser = this.userRepository.save(user);
 
             return this.userMapper.userToUserDTO(registeredUser);
@@ -104,6 +109,10 @@ public class UserService implements IUserService {
                 roles.add(role);
             }
             user.setRoles(roles);
+
+            Cart cart = new Cart();
+            cart.setUser(user);
+            user.setCart(cart);
 
             User createdUser = this.userRepository.save(user);
 

@@ -3,6 +3,8 @@ package grupo11.megastore.users.dto.user;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
+import grupo11.megastore.carts.dto.cart.CartDTO;
 import grupo11.megastore.users.dto.address.AddressDTO;
 import grupo11.megastore.users.model.Role;
 import lombok.Data;
@@ -22,4 +24,5 @@ public class UserDTO {
     private String phoneNumber;
     private AddressDTO address;
     private Set<Role> roles = new HashSet<>();
+    private CartDTO cart;
 }

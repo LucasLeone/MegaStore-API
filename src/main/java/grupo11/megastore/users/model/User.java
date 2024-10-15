@@ -7,6 +7,7 @@ import lombok.Data;
 import java.util.HashSet;
 import java.util.Set;
 
+import grupo11.megastore.carts.model.Cart;
 import grupo11.megastore.constant.EntityStatus;
 
 @Entity
@@ -42,6 +43,9 @@ public class User {
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.EAGER)
     @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Cart cart;
 
     @Column(nullable = false)
     private EntityStatus status = EntityStatus.ACTIVE;

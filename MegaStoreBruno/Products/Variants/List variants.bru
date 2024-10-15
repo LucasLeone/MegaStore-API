@@ -5,13 +5,13 @@ meta {
 }
 
 get {
-  url: http://localhost:8080/variants
+  url: http://localhost:8080/variants?productId=1
   body: none
   auth: none
 }
 
 params:query {
-  ~productId: 1
+  productId: 1
   ~size: 4xl
   ~color: rojo
 }
