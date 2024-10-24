@@ -79,7 +79,7 @@ public class CartService implements ICartService {
         boolean itemExists = cartItemRepository.findByCartCartIdAndVariantId(cart.getCartId(), variantId).isPresent();
 
         if (itemExists) {
-            throw new APIException("La variante " + variant.getId() + " ya existe en el carrito");
+            throw new APIException("La variante " + variant.getId() + " del producto " + variant.getProduct().getName() + " ya existe en el carrito");
         }
 
         if (variant.getStock() == 0) {
