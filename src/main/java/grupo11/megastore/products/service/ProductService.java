@@ -44,12 +44,12 @@ public class ProductService implements IProductService {
     private IProductMapper productMapper;
 
     @Override
-    public List<ProductDTO> getAllProducts(Long categoryId, Long subcategoryId, Long brandId, String name) {
+    public List<ProductDTO> getAllProducts(Long categoryId, Long subcategoryId, Long brandId, String search) {
         Specification<Product> spec = Specification.where(ProductSpecification.hasStatus(EntityStatus.ACTIVE))
                 .and(ProductSpecification.hasCategoryId(categoryId))
                 .and(ProductSpecification.hasSubcategoryId(subcategoryId))
                 .and(ProductSpecification.hasBrandId(brandId))
-                .and(ProductSpecification.nameContains(name));
+                .and(ProductSpecification.nameContains(search));
 
         List<Product> products = productRepository.findAll(spec);
 

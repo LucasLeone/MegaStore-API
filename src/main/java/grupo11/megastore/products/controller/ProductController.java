@@ -25,9 +25,9 @@ public class ProductController {
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Long subcategoryId,
             @RequestParam(required = false) Long brandId,
-            @RequestParam(required = false) String name
+            @RequestParam(required = false) String search
     ) {
-        List<ProductDTO> products = this.productService.getAllProducts(categoryId, subcategoryId, brandId, name);
+        List<ProductDTO> products = this.productService.getAllProducts(categoryId, subcategoryId, brandId, search);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
