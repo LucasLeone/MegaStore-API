@@ -1,0 +1,29 @@
+meta {
+  name: Create sale
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/sales
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "userId": 8,
+    "paymentMethod": "Efectivo",
+    "saleDetails": [
+      {
+        "variantId": 3,
+        "quantity": 1
+      },
+      {
+        "variantId": 2,
+        "quantity": 1
+      }
+    ]
+  }
+  
+}
