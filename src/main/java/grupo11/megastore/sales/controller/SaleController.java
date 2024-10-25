@@ -32,6 +32,12 @@ public class SaleController {
         return new ResponseEntity<>(sales, HttpStatus.OK);
     }
 
+    @GetMapping("/{id}/my-sales")
+    public ResponseEntity<List<SaleDTO>> getMySales(@PathVariable Long id) {
+        List<SaleDTO> sales = this.saleService.getSalesByUserId(id);
+        return new ResponseEntity<>(sales, HttpStatus.OK);
+    }
+
     @PostMapping
     public ResponseEntity<SaleDTO> createSale(@Valid @RequestBody CreateSaleDTO body) {
         SaleDTO sale = this.saleService.createSale(body);

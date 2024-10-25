@@ -11,4 +11,5 @@ import grupo11.megastore.sales.model.Sale;
 public interface SaleRepository extends JpaRepository<Sale, Long> {
     Optional<Sale> findByIdAndStatus(Long id, EntityStatus status);
     List<Sale> findByStatus(EntityStatus status);
+    List<Sale> findByUserIdAndStatus(Long userId, EntityStatus status);
 }

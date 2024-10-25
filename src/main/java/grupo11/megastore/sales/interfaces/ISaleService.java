@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface ISaleService {
     List<SaleDTO> getAllSales();
+    List<SaleDTO> getSalesByUserId(Long userId);
     SaleDTO getSaleById(Long id);
     SaleDTO createSale(CreateSaleDTO body);
     void deleteSale(Long id);

@@ -59,6 +59,21 @@ public class SaleService implements ISaleService {
     }
 
     @Override
+    public List<SaleDTO> getSalesByUserId(Long userId) {
+        this.userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", userId));
+
+        List<Sale> sales = this.saleRepository.findByUserIdAndStatus(userId, EntityStatus.ACTIVE);
+
+        List<SaleDTO> dtos = new ArrayList<>();
+        sales.forEach(sale -> {
+            dtos.add(this.saleMapper.saleToSaleDTO(sale));
+        });
+
+        return dtos;
+    }
+
+    @Override
     public SaleDTO getSaleById(Long id) {
         Sale sale = this.saleRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Venta", "id", id));
