@@ -15,9 +15,11 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Data
+@EqualsAndHashCode(exclude = "user")
 @Table(name = "carts")
 public class Cart {
     @Id

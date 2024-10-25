@@ -5,9 +5,14 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import grupo11.megastore.constant.EntityStatus;
 import grupo11.megastore.products.model.Variant;
+
 
 /**
  * Repository interface for managing Variant entities.
@@ -102,4 +107,9 @@ public interface VariantRepository extends JpaRepository<Variant, Long>, JpaSpec
     List<Variant> findBySizeContainingAndStatus(String size, EntityStatus status);
 
     List<Variant> findByStatus(EntityStatus status);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Variant v SET v.stock = v.stock - :quantity WHERE v.id = :variantId AND v.stock >= :quantity")
+    int decrementStock(@Param("variantId") Long variantId, @Param("quantity") int quantity);
 }

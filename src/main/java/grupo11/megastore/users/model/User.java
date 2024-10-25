@@ -3,6 +3,7 @@ package grupo11.megastore.users.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +13,7 @@ import grupo11.megastore.constant.EntityStatus;
 
 @Entity
 @Data
+@EqualsAndHashCode(exclude = "cart")
 @Table(name = "users")
 public class User {
     @Id

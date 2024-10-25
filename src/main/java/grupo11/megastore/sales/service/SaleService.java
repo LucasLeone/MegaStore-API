@@ -2,8 +2,12 @@ package grupo11.megastore.sales.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import grupo11.megastore.carts.model.Cart;
+import grupo11.megastore.carts.model.repository.CartRepository;
 import grupo11.megastore.constant.EntityStatus;
+import grupo11.megastore.exception.APIException;
 import grupo11.megastore.exception.ResourceNotFoundException;
 import grupo11.megastore.products.model.Variant;
 import grupo11.megastore.products.model.repository.VariantRepository;
@@ -37,6 +41,9 @@ public class SaleService implements ISaleService {
     private VariantRepository variantRepository;
 
     @Autowired
+    private CartRepository cartRepository;
+
+    @Autowired
     private ISaleMapper saleMapper;
 
     @Override
@@ -60,6 +67,7 @@ public class SaleService implements ISaleService {
     }
 
     @Override
+    @Transactional
     public SaleDTO createSale(CreateSaleDTO body) {
         User user = this.userRepository.findById(body.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", body.getUserId()));
@@ -77,12 +85,16 @@ public class SaleService implements ISaleService {
         sale.setCountry(shippingInfo.getCountry());
 
         for (CreateSaleDetailDTO detailDTO : body.getSaleDetails()) {
-            Variant variant = this.variantRepository.findById(detailDTO.getVariantId())
+            int updatedRows = variantRepository.decrementStock(detailDTO.getVariantId(), detailDTO.getQuantity());
+            if (updatedRows == 0) {
+                throw new APIException("Stock insuficiente para la variante con id " + detailDTO.getVariantId());
+            }
+
+            Variant variant = variantRepository.findById(detailDTO.getVariantId())
                     .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", detailDTO.getVariantId()));
 
             SaleDetail saleDetail = new SaleDetail();
             saleDetail.setVariant(variant);
-
             saleDetail.setQuantity(detailDTO.getQuantity());
 
             BigDecimal unitPrice = BigDecimal.valueOf(variant.getProduct().getPrice());
@@ -94,6 +106,12 @@ public class SaleService implements ISaleService {
         sale.calculateTotalAmount();
 
         Sale savedSale = this.saleRepository.save(sale);
+
+        Cart cart = user.getCart();
+        if (cart != null) {
+            cart.getCartItems().clear();
+            cartRepository.save(cart);
+        }
 
         return this.saleMapper.saleToSaleDTO(savedSale);
     }
