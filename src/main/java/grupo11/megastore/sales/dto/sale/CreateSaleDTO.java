@@ -19,4 +19,9 @@ public class CreateSaleDTO {
 
     @NotEmpty
     private List<@Valid CreateSaleDetailDTO> saleDetails;
+
+
+    @NotNull
+    @Valid
+    private ShippingInfoDTO shippingInfo;
 }

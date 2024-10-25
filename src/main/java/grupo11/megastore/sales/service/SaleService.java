@@ -14,6 +14,7 @@ import grupo11.megastore.users.model.User;
 import grupo11.megastore.users.model.repository.UserRepository;
 import grupo11.megastore.sales.dto.sale.CreateSaleDTO;
 import grupo11.megastore.sales.dto.sale.SaleDTO;
+import grupo11.megastore.sales.dto.sale.ShippingInfoDTO;
 import grupo11.megastore.sales.dto.saleDetail.CreateSaleDetailDTO;
 import grupo11.megastore.sales.model.Sale;
 import grupo11.megastore.sales.model.SaleDetail;
@@ -25,7 +26,7 @@ import java.math.BigDecimal;
 
 @Service
 public class SaleService implements ISaleService {
-    
+
     @Autowired
     private SaleRepository saleRepository;
 
@@ -67,6 +68,13 @@ public class SaleService implements ISaleService {
         sale.setUser(user);
         sale.setSaleDate(LocalDateTime.now());
         sale.setPaymentMethod(body.getPaymentMethod());
+
+        ShippingInfoDTO shippingInfo = body.getShippingInfo();
+        sale.setFullName(shippingInfo.getFullName());
+        sale.setAddress(shippingInfo.getAddress());
+        sale.setCity(shippingInfo.getCity());
+        sale.setPostalCode(shippingInfo.getPostalCode());
+        sale.setCountry(shippingInfo.getCountry());
 
         for (CreateSaleDetailDTO detailDTO : body.getSaleDetails()) {
             Variant variant = this.variantRepository.findById(detailDTO.getVariantId())

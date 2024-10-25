@@ -30,7 +30,22 @@ public class Sale {
     private String paymentMethod;
 
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalAmount;    
+    private BigDecimal totalAmount;
+
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
+
+    @Column(name = "address", nullable = false)
+    private String address;
+
+    @Column(name = "city", nullable = false)
+    private String city;
+
+    @Column(name = "postal_code", nullable = false)
+    private String postalCode;
+
+    @Column(name = "country", nullable = false)
+    private String country;
 
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SaleDetail> saleDetails = new ArrayList<>();

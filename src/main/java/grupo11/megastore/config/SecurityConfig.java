@@ -49,6 +49,9 @@ public class SecurityConfig {
                 .requestMatchers(AppConstants.PUBLIC_URLS).permitAll()
                 .requestMatchers(HttpMethod.GET, "/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/users/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/sales/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/sales/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .exceptionHandling(exception -> exception
