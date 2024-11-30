@@ -31,6 +31,10 @@ public class Address {
     @Size(max = 50, message = "La ciudad no puede tener más de 50 caracteres")
     private String city;
 
+    @NotBlank(message = "La provincia es obligatoria")
+    @Size(max = 50, message = "La provincia no puede tener más de 50 caracteres")
+    private String state;
+
     @NotBlank(message = "El código postal es obligatorio")
     @Size(max = 10, message = "El código postal no puede tener más de 10 caracteres")
     private String postalCode;

@@ -3,11 +3,9 @@ package grupo11.megastore.sales.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,15 +48,21 @@ public class SaleController {
         return new ResponseEntity<>(sale, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSale(@PathVariable Long id) {
-        this.saleService.deleteSale(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    @PostMapping("/{id}/sent")
+    public ResponseEntity<SaleDTO> markSaleAsSent(@PathVariable Long id) {
+        SaleDTO sale = this.saleService.markSaleAsSent(id);
+        return new ResponseEntity<>(sale, HttpStatus.OK);
     }
 
-    @PutMapping("/{id}/restore")
-    public ResponseEntity<Void> restoreSale(@PathVariable Long id) {
-        this.saleService.restoreSale(id);
-        return new ResponseEntity<>(HttpStatus.OK);
+    @PostMapping("/{id}/completed")
+    public ResponseEntity<SaleDTO> markSaleAsCompleted(@PathVariable Long id) {
+        SaleDTO sale = this.saleService.markSaleAsCompleted(id);
+        return new ResponseEntity<>(sale, HttpStatus.OK);
+    }
+
+    @PostMapping("/{id}/canceled")
+    public ResponseEntity<SaleDTO> markSaleAsCanceled(@PathVariable Long id) {
+        SaleDTO sale = this.saleService.markSaleAsCanceled(id);
+        return new ResponseEntity<>(sale, HttpStatus.OK);
     }
 }

@@ -15,6 +15,7 @@ public class CreateAddressDTO {
     private String floor;
     private String apartment;
     private String city;
+    private String state;
     private String postalCode;
     private String country;
 }

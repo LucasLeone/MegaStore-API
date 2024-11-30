@@ -14,6 +14,9 @@ public class ShippingInfoDTO {
     
     @NotEmpty(message = "La ciudad es obligatoria")
     private String city;
+
+    @NotEmpty(message = "La provincia es obligatoria")
+    private String state;
     
     @NotEmpty(message = "El código postal es obligatorio")
     private String postalCode;

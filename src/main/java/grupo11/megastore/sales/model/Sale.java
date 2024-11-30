@@ -1,6 +1,6 @@
 package grupo11.megastore.sales.model;
 
-import grupo11.megastore.constant.EntityStatus;
+import grupo11.megastore.sales.constant.SaleStatus;
 import grupo11.megastore.users.model.User;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -32,6 +32,12 @@ public class Sale {
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(name = "shipping_cost", nullable = false, precision = 10, scale = 2)
+    private BigDecimal shippingCost;
+
+    @Column(name = "shipping_method", nullable = false)
+    private String shippingMethod;
+
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
@@ -40,6 +46,9 @@ public class Sale {
 
     @Column(name = "city", nullable = false)
     private String city;
+
+    @Column(name = "state", nullable = false)
+    private String state;
 
     @Column(name = "postal_code", nullable = false)
     private String postalCode;
@@ -50,15 +59,24 @@ public class Sale {
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SaleDetail> saleDetails = new ArrayList<>();
 
-    @Column(nullable = false)
-    private EntityStatus status = EntityStatus.ACTIVE;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sale_status", nullable = false)
+    private SaleStatus status = SaleStatus.IN_PROCESS;
 
-    public void delete() {
-        this.setStatus(EntityStatus.DELETED);
+    public void markAsSent() {
+        this.setStatus(SaleStatus.SENT);
     }
 
-    public void restore() {
-        this.setStatus(EntityStatus.ACTIVE);
+    public void markAsCompleted() {
+        this.setStatus(SaleStatus.COMPLETED);
+    }
+
+    public void markAsCanceled() {
+        this.setStatus(SaleStatus.CANCELED);
+    }
+
+    public void markIsInProcess() {
+        this.setStatus(SaleStatus.IN_PROCESS);
     }
 
     public void addSaleDetail(SaleDetail detail) {
@@ -77,5 +95,6 @@ public class Sale {
         this.totalAmount = saleDetails.stream()
                 .map(SaleDetail::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.totalAmount = this.totalAmount.add(this.shippingCost);
     }
 }

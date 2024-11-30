@@ -11,6 +11,7 @@ import grupo11.megastore.exception.APIException;
 import grupo11.megastore.exception.ResourceNotFoundException;
 import grupo11.megastore.products.model.Variant;
 import grupo11.megastore.products.model.repository.VariantRepository;
+import grupo11.megastore.sales.constant.SaleStatus;
 import grupo11.megastore.sales.dto.ISaleMapper;
 import grupo11.megastore.sales.interfaces.ISaleService;
 import grupo11.megastore.sales.model.repository.SaleRepository;
@@ -48,7 +49,7 @@ public class SaleService implements ISaleService {
 
     @Override
     public List<SaleDTO> getAllSales() {
-        List<Sale> sales = this.saleRepository.findByStatus(EntityStatus.ACTIVE);
+        List<Sale> sales = this.saleRepository.findAll();
 
         List<SaleDTO> dtos = new ArrayList<>();
         sales.forEach(sale -> {
@@ -63,7 +64,7 @@ public class SaleService implements ISaleService {
         this.userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", userId));
 
-        List<Sale> sales = this.saleRepository.findByUserIdAndStatus(userId, EntityStatus.ACTIVE);
+        List<Sale> sales = this.saleRepository.findByUserId(userId);
 
         List<SaleDTO> dtos = new ArrayList<>();
         sales.forEach(sale -> {
@@ -75,7 +76,7 @@ public class SaleService implements ISaleService {
 
     @Override
     public SaleDTO getSaleById(Long id) {
-        Sale sale = this.saleRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+        Sale sale = this.saleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Venta", "id", id));
 
         return this.saleMapper.saleToSaleDTO(sale);
@@ -93,9 +94,12 @@ public class SaleService implements ISaleService {
         sale.setPaymentMethod(body.getPaymentMethod());
 
         ShippingInfoDTO shippingInfo = body.getShippingInfo();
+        sale.setShippingCost(body.getShippingCost());
+        sale.setShippingMethod(body.getShippingMethod());
         sale.setFullName(shippingInfo.getFullName());
         sale.setAddress(shippingInfo.getAddress());
         sale.setCity(shippingInfo.getCity());
+        sale.setState(shippingInfo.getState());
         sale.setPostalCode(shippingInfo.getPostalCode());
         sale.setCountry(shippingInfo.getCountry());
 
@@ -132,22 +136,54 @@ public class SaleService implements ISaleService {
     }
 
     @Override
-    public void deleteSale(Long id) {
-        Sale entity = this.saleRepository.findByIdAndStatus(id, EntityStatus.ACTIVE)
+    @Transactional
+    public SaleDTO markSaleAsSent(Long id) {
+        Sale sale = this.saleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Venta", "id", id));
 
-        entity.delete();
+        if (sale.getStatus() != SaleStatus.IN_PROCESS) {
+            throw new APIException("Solo las ventas en proceso pueden ser marcadas como enviadas.");
+        }
 
-        this.saleRepository.save(entity);
+        sale.markAsSent();
+        Sale updatedSale = saleRepository.save(sale);
+        return saleMapper.saleToSaleDTO(updatedSale);
     }
 
     @Override
-    public void restoreSale(Long id) {
-        Sale entity = this.saleRepository.findByIdAndStatus(id, EntityStatus.DELETED)
+    @Transactional
+    public SaleDTO markSaleAsCompleted(Long id) {
+        Sale sale = this.saleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Venta", "id", id));
 
-        entity.restore();
+        if (sale.getStatus() != SaleStatus.SENT) {
+            throw new APIException("Solo las ventas enviadas pueden ser marcadas como completadas.");
+        }
 
-        this.saleRepository.save(entity);
+        sale.markAsCompleted();
+        Sale updatedSale = saleRepository.save(sale);
+        return saleMapper.saleToSaleDTO(updatedSale);
+    }
+
+    @Override
+    @Transactional
+    public SaleDTO markSaleAsCanceled(Long id) {
+        Sale sale = this.saleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Venta", "id", id));
+
+        if (sale.getStatus() == SaleStatus.CANCELED) {
+            throw new APIException("La venta ya se encuentra cancelada.");
+        }
+
+        sale.markAsCanceled();
+        Sale updatedSale = saleRepository.save(sale);
+
+        for (SaleDetail detail : updatedSale.getSaleDetails()) {
+            Variant variant = detail.getVariant();
+            variant.setStock(variant.getStock() + detail.getQuantity());
+            variantRepository.save(variant);
+        }
+
+        return saleMapper.saleToSaleDTO(updatedSale);
     }
 }

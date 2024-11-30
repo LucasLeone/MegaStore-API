@@ -10,6 +10,7 @@ public interface ISaleService {
     List<SaleDTO> getSalesByUserId(Long userId);
     SaleDTO getSaleById(Long id);
     SaleDTO createSale(CreateSaleDTO body);
-    void deleteSale(Long id);
-    void restoreSale(Long id);
+    SaleDTO markSaleAsSent(Long id);
+    SaleDTO markSaleAsCompleted(Long id);
+    SaleDTO markSaleAsCanceled(Long id);
 }

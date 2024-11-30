@@ -16,9 +16,12 @@ public class SaleDTO {
     private String paymentMethod;
     private BigDecimal totalAmount;
     private List<SaleDetailDTO> saleDetails;
+    private BigDecimal shippingCost;
+    private String shippingMethod;
     private String fullName;
     private String address;
     private String city;
+    private String state;
     private String postalCode;
     private String country;
     private String status;
