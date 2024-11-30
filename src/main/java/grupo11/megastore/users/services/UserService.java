@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import grupo11.megastore.carts.model.Cart;
@@ -24,10 +25,13 @@ import grupo11.megastore.users.dto.user.CreateUserDTO;
 import grupo11.megastore.users.dto.user.RegisterUserDTO;
 
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class UserService implements IUserService {
@@ -43,6 +47,11 @@ public class UserService implements IUserService {
 
     @Autowired
     private IAddressMapper addressMapper;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private final Map<String, String> resetTokens = new HashMap<>();
 
     @Override
     public List<UserDTO> getAllUsers() {
@@ -269,5 +278,35 @@ public class UserService implements IUserService {
         entity.delete();
 
         this.userRepository.save(entity);
+    }
+
+    @Override
+    public void sendResetToken(String email) {
+        User user = this.userRepository.findByEmailAndStatus(email, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "email", email));
+
+        String token = UUID.randomUUID().toString();
+
+        resetTokens.put(email, token);
+
+        System.out.println("Token de restablecimiento para " + email + ": " + token);
+    }
+
+    @Override
+    public void restorePassword(String email, String token, String newPassword) {
+        String storedToken = resetTokens.get(email);
+        if (storedToken == null || !storedToken.equals(token)) {
+            throw new APIException("Token de restablecimiento inválido o expirado.");
+        }
+
+        User user = this.userRepository.findByEmailAndStatus(email, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "email", email));
+
+        String encodedPassword = passwordEncoder.encode(newPassword);
+
+        user.setPassword(encodedPassword);
+        this.userRepository.save(user);
+
+        resetTokens.remove(email);
     }
 }

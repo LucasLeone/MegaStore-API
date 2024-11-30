@@ -64,4 +64,18 @@ public class UserController {
         this.userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/send-reset-token")
+    public ResponseEntity<Void> sendResetToken(@RequestParam String email) {
+        userService.sendResetToken(email);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestParam String email,
+            @RequestParam String token,
+            @RequestParam String newPassword) {
+        userService.restorePassword(email, token, newPassword);
+        return ResponseEntity.ok().build();
+    }
 }

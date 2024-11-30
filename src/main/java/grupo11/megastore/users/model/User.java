@@ -55,4 +55,8 @@ public class User {
     public void delete() {
         this.setStatus(EntityStatus.DELETED);
     }
+
+    public void restorePassword(String newPassword) {
+        this.setPassword(newPassword);
+    }
 }

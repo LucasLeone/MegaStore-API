@@ -17,4 +17,6 @@ public interface IUserService {
     UserDTO updateUser(Long id, UpdateUserDTO user);
     UserDTO updateSelfInfo(UpdateUserDTO user);
     void deleteUser(Long id);
+    void sendResetToken(String email);
+    void restorePassword(String email, String token, String newPassword);
 }
