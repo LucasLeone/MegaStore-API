@@ -1,0 +1,21 @@
+meta {
+  name: Reports
+  type: http
+  seq: 8
+}
+
+get {
+  url: http://localhost:8080/sales/reports
+  body: none
+  auth: none
+}
+
+params:query {
+  ~brands: 1
+  ~period: monthly
+  ~categories: 1
+  ~subcategories: 1
+  ~startDate: 2024-12-28
+  ~endDate: 2024-12-31
+  ~customerId: 1
+}

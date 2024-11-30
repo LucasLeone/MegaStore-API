@@ -1,21 +1,27 @@
 package grupo11.megastore.sales.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import grupo11.megastore.sales.interfaces.ISaleService;
 import jakarta.validation.Valid;
 import grupo11.megastore.sales.dto.sale.CreateSaleDTO;
 import grupo11.megastore.sales.dto.sale.SaleDTO;
+import grupo11.megastore.sales.dto.sale.SalesReportFilterDTO;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping(path = "/sales")
@@ -64,5 +70,36 @@ public class SaleController {
     public ResponseEntity<SaleDTO> markSaleAsCanceled(@PathVariable Long id) {
         SaleDTO sale = this.saleService.markSaleAsCanceled(id);
         return new ResponseEntity<>(sale, HttpStatus.OK);
+    }
+
+    @GetMapping("/reports")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> getSalesReport(
+            @RequestParam(required = false) String period,
+            @RequestParam(required = false) List<Long> brands,
+            @RequestParam(required = false) List<Long> categories,
+            @RequestParam(required = false) List<Long> subcategories,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) Long customerId) {
+
+        SalesReportFilterDTO filterDTO = new SalesReportFilterDTO();
+        filterDTO.setPeriod(period);
+        filterDTO.setBrands(brands);
+        filterDTO.setCategories(categories);
+        filterDTO.setSubcategories(subcategories);
+        filterDTO.setStartDate(startDate);
+        filterDTO.setEndDate(endDate);
+        filterDTO.setCustomerId(customerId);
+
+        Map<String, Object> report = saleService.generateSalesReport(filterDTO);
+        return ResponseEntity.ok(report);
+    }
+
+    @GetMapping("/customer-statistics")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> getCustomerStatistics() {
+        Map<String, Object> statistics = saleService.getCustomerStatistics();
+        return ResponseEntity.ok(statistics);
     }
 }
