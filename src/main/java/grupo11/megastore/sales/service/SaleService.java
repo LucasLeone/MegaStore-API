@@ -280,8 +280,10 @@ public class SaleService implements ISaleService {
                 return LocalDateTime.now().minusWeeks(1);
             case "monthly":
                 return LocalDateTime.now().minusMonths(1);
+            case "yearly":
+                return LocalDateTime.now().minusYears(1);
             default:
-                throw new APIException("Período no válido. Usa 'daily', 'weekly' o 'monthly'.");
+                throw new APIException("Período no válido. Usa 'daily', 'weekly', 'monthly' o 'yearly'.");
         }
     }
 
