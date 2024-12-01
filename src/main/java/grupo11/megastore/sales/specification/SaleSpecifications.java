@@ -9,7 +9,6 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class SaleSpecifications {
 
@@ -23,36 +22,36 @@ public class SaleSpecifications {
                 criteriaBuilder.between(root.get("saleDate"), start, end);
     }
 
-    public static Specification<Sale> hasBrandIn(List<Long> brands) {
+    public static Specification<Sale> hasBrandIn(Long brand) {
         return (root, query, criteriaBuilder) -> {
-            if (brands == null || brands.isEmpty()) {
+            if (brand == null) {
                 return criteriaBuilder.conjunction();
             }
             Join<Sale, SaleDetail> saleDetailJoin = root.join("saleDetails", JoinType.LEFT);
             Join<SaleDetail, Product> productJoin = saleDetailJoin.join("variant").join("product");
-            return productJoin.get("brand").get("id").in(brands);
+            return productJoin.get("brand").get("id").in(brand);
         };
     }
 
-    public static Specification<Sale> hasCategoryIn(List<Long> categories) {
+    public static Specification<Sale> hasCategoryIn(Long category) {
         return (root, query, criteriaBuilder) -> {
-            if (categories == null || categories.isEmpty()) {
+            if (category == null) {
                 return criteriaBuilder.conjunction();
             }
             Join<Sale, SaleDetail> saleDetailJoin = root.join("saleDetails", JoinType.LEFT);
             Join<SaleDetail, Product> productJoin = saleDetailJoin.join("variant").join("product");
-            return productJoin.get("category").get("id").in(categories);
+            return productJoin.get("category").get("id").in(category);
         };
     }
 
-    public static Specification<Sale> hasSubcategoryIn(List<Long> subcategories) {
+    public static Specification<Sale> hasSubcategoryIn(Long subcategory) {
         return (root, query, criteriaBuilder) -> {
-            if (subcategories == null || subcategories.isEmpty()) {
+            if (subcategory == null) {
                 return criteriaBuilder.conjunction();
             }
             Join<Sale, SaleDetail> saleDetailJoin = root.join("saleDetails", JoinType.LEFT);
             Join<SaleDetail, Product> productJoin = saleDetailJoin.join("variant").join("product");
-            return productJoin.get("subcategory").get("id").in(subcategories);
+            return productJoin.get("subcategory").get("id").in(subcategory);
         };
     }
 

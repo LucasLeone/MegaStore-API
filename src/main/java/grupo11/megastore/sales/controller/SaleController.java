@@ -76,18 +76,18 @@ public class SaleController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getSalesReport(
             @RequestParam(required = false) String period,
-            @RequestParam(required = false) List<Long> brands,
-            @RequestParam(required = false) List<Long> categories,
-            @RequestParam(required = false) List<Long> subcategories,
+            @RequestParam(required = false) Long brand,
+            @RequestParam(required = false) Long category,
+            @RequestParam(required = false) Long subcategory,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Long customerId) {
 
         SalesReportFilterDTO filterDTO = new SalesReportFilterDTO();
         filterDTO.setPeriod(period);
-        filterDTO.setBrands(brands);
-        filterDTO.setCategories(categories);
-        filterDTO.setSubcategories(subcategories);
+        filterDTO.setBrand(brand);
+        filterDTO.setCategory(category);
+        filterDTO.setSubcategory(subcategory);
         filterDTO.setStartDate(startDate);
         filterDTO.setEndDate(endDate);
         filterDTO.setCustomerId(customerId);

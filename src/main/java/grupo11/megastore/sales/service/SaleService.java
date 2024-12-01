@@ -200,9 +200,9 @@ public class SaleService implements ISaleService {
                 filterDTO.getPeriod() != null ? getStartDateBasedOnPeriod(filterDTO.getPeriod()) : null,
                 filterDTO.getStartDate() != null ? filterDTO.getStartDate().atStartOfDay() : null,
                 filterDTO.getEndDate() != null ? filterDTO.getEndDate().atTime(23, 59, 59) : null,
-                filterDTO.getBrands(),
-                filterDTO.getCategories(),
-                filterDTO.getSubcategories(),
+                filterDTO.getBrand(),
+                filterDTO.getCategory(),
+                filterDTO.getSubcategory(),
                 filterDTO.getCustomerId());
 
         BigDecimal totalSales = sales.stream()
@@ -238,9 +238,9 @@ public class SaleService implements ISaleService {
             LocalDateTime periodStartDate,
             LocalDateTime startDate,
             LocalDateTime endDate,
-            List<Long> brands,
-            List<Long> categories,
-            List<Long> subcategories,
+            Long brand,
+            Long category,
+            Long subcategory,
             Long customerId) {
         Specification<Sale> spec = Specification.where(null);
 
@@ -255,13 +255,13 @@ public class SaleService implements ISaleService {
         }
 
         // Filtrar por marcas
-        spec = spec.and(SaleSpecifications.hasBrandIn(brands));
+        spec = spec.and(SaleSpecifications.hasBrandIn(brand));
 
         // Filtrar por categorías
-        spec = spec.and(SaleSpecifications.hasCategoryIn(categories));
+        spec = spec.and(SaleSpecifications.hasCategoryIn(category));
 
         // Filtrar por subcategorías
-        spec = spec.and(SaleSpecifications.hasSubcategoryIn(subcategories));
+        spec = spec.and(SaleSpecifications.hasSubcategoryIn(subcategory));
 
         // Filtrar por cliente
         spec = spec.and(SaleSpecifications.hasCustomerId(customerId));
@@ -289,21 +289,10 @@ public class SaleService implements ISaleService {
     public Map<String, Object> getCustomerStatistics() {
         List<Sale> sales = saleRepository.findAll();
 
-        double avgOrderValue = sales.stream()
-                .mapToDouble(sale -> sale.getTotalAmount().doubleValue())
-                .average()
-                .orElse(0.0);
-
         Map<Long, Long> purchaseFrequency = sales.stream()
                 .collect(Collectors.groupingBy(
                         sale -> sale.getUser().getId(),
                         Collectors.counting()));
-
-        Map<String, Long> favoriteProducts = sales.stream()
-                .flatMap(sale -> sale.getSaleDetails().stream())
-                .collect(Collectors.groupingBy(
-                        detail -> detail.getVariant().getProduct().getName(),
-                        Collectors.summingLong(SaleDetail::getQuantity)));
 
         // Calcular valor promedio por cliente
         Map<Long, Double> avgOrderValuePerCustomer = sales.stream()
@@ -322,9 +311,7 @@ public class SaleService implements ISaleService {
                         LinkedHashMap::new));
 
         Map<String, Object> statistics = new HashMap<>();
-        statistics.put("averageOrderValue", avgOrderValue);
         statistics.put("purchaseFrequency", purchaseFrequency);
-        statistics.put("favoriteProducts", favoriteProducts);
         statistics.put("topCustomers", topCustomers);
 
         return statistics;
