@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateBrandDTO {
-    @Size(min = 2, max = 32, message = "El nombre debe tener entre 2 y 32 caracteres")
+    @Size(min = 3, max = 32, message = "El nombre debe tener entre 3 y 32 caracteres")
     @NotEmpty(message = "El nombre es requerido")
     private String name;
 

@@ -14,7 +14,7 @@ public class Product {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    @Size(min = 2, max = 32, message = "El nombre debe tener entre 2 y 32 caracteres")
+    @Size(min = 2, max = 32)
     private String name;
 
     @Column(nullable = true)

@@ -19,7 +19,7 @@ public class Brand {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    @Size(min = 2, max = 32)
+    @Size(min = 3, max = 32)
     private String name;
 
     @Column(nullable = true)
