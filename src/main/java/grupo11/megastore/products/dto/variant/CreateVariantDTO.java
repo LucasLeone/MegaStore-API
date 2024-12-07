@@ -3,6 +3,7 @@ package grupo11.megastore.products.dto.variant;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -13,12 +14,12 @@ public class CreateVariantDTO {
     @NotNull(message = "El producto es obligatorio")
     private Long productId;
 
-    @Size(min = 1, max = 32, message = "El color debe tener entre 1 y 32 caracteres")
-    @NotNull(message = "El color es obligatorio")
+    @NotBlank(message = "El color es obligatorio")
+    @Size(max = 32, message = "El color no puede exceder los 32 caracteres")
     private String color;
 
-    @Size(min = 1, max = 32, message = "El talle debe tener entre 1 y 10 caracteres")
-    @NotNull(message = "El talle es obligatorio")
+    @NotBlank(message = "El talle es obligatorio")
+    @Size(min = 1, max = 10, message = "El talle debe tener entre 1 y 10 caracteres")
     private String size;
 
     @Min(value = 0, message = "El stock no puede ser negativo")
