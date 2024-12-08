@@ -156,4 +156,75 @@ public class CreateProductDTOTest {
 
         assertTrue(violations.isEmpty(), "No debería haber violaciones con un precio válido");
     }
+
+    // Tests 1.3.3
+    // @Test
+    // void testCategoriaInexistente() {
+    //     CreateProductDTO dto = new CreateProductDTO();
+    //     dto.setName("Producto Valido");
+    //     dto.setPrice(25.50);
+    //     dto.setCategoryId(9999L);
+    //     dto.setSubcategoryId(1L);
+    //     dto.setBrandId(1L);
+
+    //     Set<ConstraintViolation<CreateProductDTO>> violations = validator.validate(dto);
+
+    //     assertTrue(!violations.isEmpty(), "Debería haber al menos una violación");
+    //     boolean foundExpectedMessage = violations.stream()
+    //             .anyMatch(v -> v.getMessage().equals("La categoría seleccionada no existe"));
+
+    //     assertTrue(foundExpectedMessage, "Debería haberse encontrado el mensaje 'La categoría seleccionada no existe");
+    // }
+
+    // @Test
+    // void testPrecioNegativoYCategoriaValida() {
+    //     CreateProductDTO dto = new CreateProductDTO();
+    //     dto.setName("Producto Valido");
+    //     dto.setPrice(-10.0);
+    //     dto.setCategoryId(1L);
+    //     dto.setSubcategoryId(1L);
+    //     dto.setBrandId(1L);
+
+    //     Set<ConstraintViolation<CreateProductDTO>> violations = validator.validate(dto);
+
+    //     assertTrue(!violations.isEmpty(), "Debería haber una violación si el precio es negativo");
+
+    //     boolean foundExpectedMessage = violations.stream()
+    //             .anyMatch(v -> v.getMessage().equals("El precio debe ser positivo"));
+                
+    //     assertTrue(foundExpectedMessage, "Debería haberse encontrado el mensaje 'El precio debe ser positivo'");
+    // }
+
+    // @Test
+    // void testCategoriaInexistenteYPrecioNegativo() {
+    //     CreateProductDTO dto = new CreateProductDTO();
+    //     dto.setName("Producto Valido");
+    //     dto.setPrice(-10.0);
+    //     dto.setCategoryId(9999L);
+    //     dto.setSubcategoryId(1L);
+    //     dto.setBrandId(1L);
+
+    //     Set<ConstraintViolation<CreateProductDTO>> violations = validator.validate(dto);
+
+    //     assertTrue(!violations.isEmpty(), "Debería haber al menos una violación");
+
+    //     boolean foundExpectedMessage = violations.stream()
+    //             .anyMatch(v -> v.getMessage().equals("La categoría seleccionada no existe"));
+
+    //     assertTrue(foundExpectedMessage, "Debería haberse encontrado el mensaje 'La categoría seleccionada no existe");
+    // }
+
+    // @Test
+    // void testCategoriaValidaYPrecioValido() {
+    //     CreateProductDTO dto = new CreateProductDTO();
+    //     dto.setName("Producto Valido");
+    //     dto.setPrice(25.50);
+    //     dto.setCategoryId(1L);
+    //     dto.setSubcategoryId(1L);
+    //     dto.setBrandId(1L);
+
+    //     Set<ConstraintViolation<CreateProductDTO>> violations = validator.validate(dto);
+
+    //     assertTrue(violations.isEmpty(), "No debería haber violaciones con una categoría válida y un precio válido");
+    // }
 }

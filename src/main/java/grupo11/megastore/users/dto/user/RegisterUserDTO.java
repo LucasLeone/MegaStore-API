@@ -24,7 +24,7 @@ public class RegisterUserDTO {
     @Pattern(regexp = "^[a-zA-Z ]*$", message = "El apellido solo puede contener letras")
     private String lastName;
 
-    @Email(message = "El email debe ser válido")
+    @Email(regexp = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$", message = "El email debe ser válido")
     private String email;
 
     @Pattern(regexp = "^[0-9]{9,15}$", message = "El número de teléfono debe tener entre 9 y 15 dígitos")

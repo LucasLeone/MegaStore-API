@@ -41,11 +41,11 @@ public class RegisterUserDTOTest {
     void testNombreDemasiadoLargo() {
         RegisterUserDTO dto = new RegisterUserDTO();
         // Crear un nombre de 21 caracteres para violar max=20
-        dto.setFirstName("abcdefghijklmnopqrsua"); 
+        dto.setFirstName("abcdefghijklmnopqrsua");
 
         Set<ConstraintViolation<RegisterUserDTO>> violations = validator.validate(dto);
         assertTrue(!violations.isEmpty(), "Debería haber violaciones si el nombre excede los 20 caracteres");
-        
+
         ConstraintViolation<RegisterUserDTO> violation = violations.iterator().next();
         assertEquals("El nombre debe tener entre 2 y 20 caracteres", violation.getMessage());
     }
@@ -115,5 +115,50 @@ public class RegisterUserDTOTest {
 
         Set<ConstraintViolation<RegisterUserDTO>> violations = validator.validate(dto);
         assertTrue(violations.isEmpty(), "No debería haber violaciones con una contraseña válida");
+    }
+
+    // Tests 1.3.2
+    @Test
+    void testEmailInvalido() {
+        RegisterUserDTO dto = new RegisterUserDTO();
+        dto.setEmail("usuario@invalid"); // Email sin dominio
+
+        Set<ConstraintViolation<RegisterUserDTO>> violations = validator.validate(dto);
+        assertTrue(!violations.isEmpty(), "Debería haber violaciones con un email inválido");
+
+        ConstraintViolation<RegisterUserDTO> violation = violations.iterator().next();
+        assertEquals("El email debe ser válido", violation.getMessage());
+    }
+
+    @Test
+    void testContrasenaCorta() {
+        RegisterUserDTO dto = new RegisterUserDTO();
+        dto.setEmail("usuario@example.com");
+        dto.setPassword("123"); // Contraseña de 3 caracteres, no cumple con min=8
+
+        Set<ConstraintViolation<RegisterUserDTO>> violations = validator.validate(dto);
+        assertTrue(!violations.isEmpty(), "Debería haber violaciones con una contraseña corta");
+
+        ConstraintViolation<RegisterUserDTO> violation = violations.iterator().next();
+        assertEquals("La contraseña debe tener entre 8 y 20 caracteres", violation.getMessage());
+    }
+
+    @Test
+    void testEmailInvalidoYContrasenaCorta() {
+        RegisterUserDTO dto = new RegisterUserDTO();
+        dto.setEmail("usuario@invalid"); // Email inválido
+        dto.setPassword("123"); // Contraseña corta
+
+        Set<ConstraintViolation<RegisterUserDTO>> violations = validator.validate(dto);
+        assertTrue(!violations.isEmpty(), "Debería haber violaciones con email inválido y contraseña corta");
+
+        boolean hasEmailViolation = violations.stream()
+                .anyMatch(v -> "El email debe ser válido".equals(v.getMessage()));
+        boolean hasPasswordViolation = violations.stream()
+                .anyMatch(v -> "La contraseña debe tener entre 8 y 20 caracteres".equals(v.getMessage()));
+
+        assertTrue(hasEmailViolation, "Debe haber una violación con mensaje 'El email debe ser válido'");
+        assertTrue(hasPasswordViolation,
+                "Debe haber una violación con mensaje 'La contraseña debe tener entre 8 y 20 caracteres'");
     }
 }

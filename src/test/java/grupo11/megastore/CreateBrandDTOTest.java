@@ -1,6 +1,5 @@
 package grupo11.megastore;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
@@ -33,8 +32,9 @@ public class CreateBrandDTOTest {
         Set<ConstraintViolation<CreateBrandDTO>> violations = validator.validate(dto);
         assertTrue(!violations.isEmpty(), "Debería haber violaciones si el nombre está vacío");
 
-        ConstraintViolation<CreateBrandDTO> violation = violations.iterator().next();
-        assertEquals("El nombre es requerido", violation.getMessage());
+        boolean hasNotEmptyViolation = violations.stream()
+                .anyMatch(v -> "El nombre es requerido".equals(v.getMessage()));
+        assertTrue(hasNotEmptyViolation, "Debe haber una violación con mensaje 'El nombre es requerido'");
     }
 
     @Test
@@ -45,8 +45,10 @@ public class CreateBrandDTOTest {
         Set<ConstraintViolation<CreateBrandDTO>> violations = validator.validate(dto);
         assertTrue(!violations.isEmpty(), "Debería haber violaciones si el nombre excede los 32 caracteres");
 
-        ConstraintViolation<CreateBrandDTO> violation = violations.iterator().next();
-        assertEquals("El nombre debe tener entre 3 y 32 caracteres", violation.getMessage());
+        boolean hasSizeViolation = violations.stream()
+                .anyMatch(v -> "El nombre debe tener entre 3 y 32 caracteres".equals(v.getMessage()));
+        assertTrue(hasSizeViolation,
+                "Debe haber una violación con mensaje 'El nombre debe tener entre 3 y 32 caracteres'");
     }
 
     @Test
@@ -57,15 +59,17 @@ public class CreateBrandDTOTest {
         Set<ConstraintViolation<CreateBrandDTO>> violations = validator.validate(dto);
         assertTrue(!violations.isEmpty(), "Debería haber violaciones si el nombre tiene menos de 3 caracteres");
 
-        ConstraintViolation<CreateBrandDTO> violation = violations.iterator().next();
-        assertEquals("El nombre debe tener entre 3 y 32 caracteres", violation.getMessage());
+        boolean hasSizeViolation = violations.stream()
+                .anyMatch(v -> "El nombre debe tener entre 3 y 32 caracteres".equals(v.getMessage()));
+        assertTrue(hasSizeViolation,
+                "Debe haber una violación con mensaje 'El nombre debe tener entre 3 y 32 caracteres'");
     }
 
     // Tests 1.2.1
     @Test
     void testNombreValido() {
         CreateBrandDTO dto = new CreateBrandDTO();
-        dto.setName("Nike"); // 5 caracteres
+        dto.setName("Nike"); // 4 caracteres
 
         Set<ConstraintViolation<CreateBrandDTO>> violations = validator.validate(dto);
         assertTrue(violations.isEmpty(), "No debería haber violaciones si el nombre es válido");
