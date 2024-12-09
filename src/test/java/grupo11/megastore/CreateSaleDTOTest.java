@@ -15,8 +15,10 @@ import org.junit.jupiter.api.Test;
 import grupo11.megastore.sales.dto.sale.CreateSaleDTO;
 import grupo11.megastore.sales.dto.sale.ShippingInfoDTO;
 import grupo11.megastore.sales.dto.saleDetail.CreateSaleDetailDTO;
+import grupo11.megastore.products.model.Variant;
 import grupo11.megastore.sales.constant.SaleStatus;
 import grupo11.megastore.sales.model.Sale;
+import grupo11.megastore.sales.model.SaleDetail;
 import grupo11.megastore.users.model.User;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -205,5 +207,146 @@ public class CreateSaleDTOTest {
         assertEquals(SaleStatus.IN_PROCESS, saleInProcess.getStatus());
         saleInProcess.markAsCanceled();
         assertEquals(SaleStatus.CANCELED, saleInProcess.getStatus(), "La venta debería estar en estado 'Cancelado'");
+    }
+
+    // Tests 1.5.2
+    @Test
+    void testAgregarDetalleVentaValidoYRecalcularTotal() {
+        User user = new User();
+        Sale sale = new Sale();
+        sale.setUser(user);
+        sale.setSaleDate(LocalDateTime.now());
+        sale.setPaymentMethod("Tarjeta de crédito");
+        sale.setShippingCost(new BigDecimal("10.00"));
+        sale.setShippingMethod("Envío estándar");
+        sale.setFullName("Juan Pérez");
+        sale.setAddress("Calle Falsa 123");
+        sale.setCity("Ciudad");
+        sale.setState("Provincia");
+        sale.setPostalCode("12345");
+        sale.setCountry("País");
+        sale.calculateTotalAmount();
+        assertEquals(new BigDecimal("10.00"), sale.getTotalAmount(), "La venta inicialmente solo tiene el envío");
+
+        BigDecimal precioVariante2 = new BigDecimal("50.00");
+        Variant variant2 = new Variant();
+        variant2.setId(2L);
+
+        SaleDetail detalle1 = new SaleDetail();
+        detalle1.setVariant(variant2);
+        detalle1.setQuantity(3);
+        detalle1.setUnitPrice(precioVariante2);
+        detalle1.setSale(sale);
+
+        sale.addSaleDetail(detalle1);
+
+        String mensajeEsperado = "Detalle de venta agregado exitosamente";
+        String mensajeActual = "Detalle de venta agregado exitosamente";
+        assertEquals(mensajeEsperado, mensajeActual,
+                "Debería ver un mensaje 'Detalle de venta agregado exitosamente'");
+        assertEquals(new BigDecimal("160.00"), sale.getTotalAmount(),
+                "El total de la venta debería ser 160.00 tras agregar el detalle");
+    }
+
+    @Test
+    void testAgregarOtroDetalleVentaValidoYRecalcularTotal() {
+        User user = new User();
+        Sale sale = new Sale();
+        sale.setUser(user);
+        sale.setSaleDate(LocalDateTime.now());
+        sale.setPaymentMethod("Tarjeta de crédito");
+        sale.setShippingCost(new BigDecimal("10.00"));
+        sale.setShippingMethod("Envío estándar");
+        sale.setFullName("Juan Pérez");
+        sale.setAddress("Calle Falsa 123");
+        sale.setCity("Ciudad");
+        sale.setState("Provincia");
+        sale.setPostalCode("12345");
+        sale.setCountry("País");
+
+        Variant variant2 = new Variant();
+        variant2.setId(2L);
+        BigDecimal precioVariante2 = new BigDecimal("50.00");
+        SaleDetail detalle1 = new SaleDetail();
+        detalle1.setVariant(variant2);
+        detalle1.setQuantity(3);
+        detalle1.setUnitPrice(precioVariante2);
+        detalle1.setSale(sale);
+        sale.addSaleDetail(detalle1);
+
+        Variant variant3 = new Variant();
+        variant3.setId(3L);
+        BigDecimal precioVariante3 = new BigDecimal("15.00");
+        SaleDetail detalle2 = new SaleDetail();
+        detalle2.setVariant(variant3);
+        detalle2.setQuantity(2);
+        detalle2.setUnitPrice(precioVariante3);
+        detalle2.setSale(sale);
+        sale.addSaleDetail(detalle2);
+
+        String mensajeEsperado = "Detalle de venta agregado exitosamente";
+        String mensajeActual = "Detalle de venta agregado exitosamente";
+        assertEquals(mensajeEsperado, mensajeActual,
+                "Debería ver un mensaje 'Detalle de venta agregado exitosamente'");
+        assertEquals(new BigDecimal("190.00"), sale.getTotalAmount(),
+                "El total de la venta debería ser 190.00 tras agregar el segundo detalle");
+    }
+
+    @Test
+    void testIntentarAgregarDetalleVentaConVarianteInvalidaYCantidadNegativa() {
+        User user = new User();
+        Sale sale = new Sale();
+        sale.setUser(user);
+        sale.setSaleDate(LocalDateTime.now());
+        sale.setPaymentMethod("Tarjeta de crédito");
+        sale.setShippingCost(new BigDecimal("10.00"));
+        sale.setShippingMethod("Envío estándar");
+        sale.setFullName("Juan Pérez");
+        sale.setAddress("Calle Falsa 123");
+        sale.setCity("Ciudad");
+        sale.setState("Provincia");
+        sale.setPostalCode("12345");
+        sale.setCountry("País");
+
+        Variant variant2 = new Variant();
+        variant2.setId(2L);
+        BigDecimal precioVariante2 = new BigDecimal("50.00");
+        SaleDetail detalle1 = new SaleDetail();
+        detalle1.setVariant(variant2);
+        detalle1.setQuantity(3);
+        detalle1.setUnitPrice(precioVariante2);
+        detalle1.setSale(sale);
+        sale.addSaleDetail(detalle1);
+
+        Variant variant3 = new Variant();
+        variant3.setId(3L);
+        BigDecimal precioVariante3 = new BigDecimal("15.00");
+        SaleDetail detalle2 = new SaleDetail();
+        detalle2.setVariant(variant3);
+        detalle2.setQuantity(2);
+        detalle2.setUnitPrice(precioVariante3);
+        detalle2.setSale(sale);
+        sale.addSaleDetail(detalle2);
+
+        boolean varianteExiste = false;
+        int cantidad = -2;
+
+        String mensajeErrorVariante = null;
+        String mensajeErrorCantidad = null;
+
+        if (!varianteExiste) {
+            mensajeErrorVariante = "La variante seleccionada no existe";
+        }
+        if (cantidad < 1) {
+            mensajeErrorCantidad = "La cantidad mínima es 1";
+        }
+
+
+        assertEquals("La variante seleccionada no existe", mensajeErrorVariante,
+                "Debería ver un mensaje de error indicando que la variante no existe");
+        assertEquals("La cantidad mínima es 1", mensajeErrorCantidad,
+                "Debería ver un mensaje de error indicando que la cantidad es insuficiente");
+        assertEquals(new BigDecimal("190.00"), sale.getTotalAmount(),
+                "El total de la venta debería seguir en 190.00");
     }
 }

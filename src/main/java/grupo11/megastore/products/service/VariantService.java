@@ -121,6 +121,10 @@ public class VariantService implements IVariantService {
             throw new APIException("El tamaño no puede empezar o terminar con espacios");
         }
 
+        if (variant.getStock() != null && variant.getStock() < 0) {
+            throw new APIException("El stock no puede ser negativo");
+        }
+
         if (variant.getProductId() != null || variant.getColor() != null || variant.getSize() != null) {
             Long productId = variant.getProductId() != null ? variant.getProductId() : entity.getProduct().getId();
             String color = variant.getColor() != null ? variant.getColor() : entity.getColor();
