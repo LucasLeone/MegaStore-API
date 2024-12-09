@@ -1,4 +1,4 @@
-package grupo11.megastore;
+package grupo11.megastore.tests_unitarios;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

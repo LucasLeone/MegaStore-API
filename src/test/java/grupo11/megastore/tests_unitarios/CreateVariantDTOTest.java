@@ -1,21 +1,47 @@
-package grupo11.megastore;
+package grupo11.megastore.tests_unitarios;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import grupo11.megastore.constant.EntityStatus;
+import grupo11.megastore.exception.APIException;
+import grupo11.megastore.products.dto.IVariantMapper;
 import grupo11.megastore.products.dto.variant.CreateVariantDTO;
+import grupo11.megastore.products.model.Product;
+import grupo11.megastore.products.model.Variant;
+import grupo11.megastore.products.model.repository.VariantRepository;
+import grupo11.megastore.products.service.VariantService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 
+@ExtendWith(MockitoExtension.class)
 public class CreateVariantDTOTest {
 
     private Validator validator;
+
+    @Mock
+    private VariantRepository variantRepository;
+
+    @Mock
+    private IVariantMapper variantMapper;
+
+    @InjectMocks
+    private VariantService variantService;
 
     @BeforeEach
     void setUp() {
@@ -171,5 +197,36 @@ public class CreateVariantDTOTest {
         Set<ConstraintViolation<CreateVariantDTO>> violations = validator.validate(dto);
 
         assertTrue(violations.isEmpty(), "No debería haber violaciones con color y stock válidos");
+    }
+
+    // Tests 1.5.5
+    @Test
+    void testColorYTamanoDuplicado() {
+        Product existingProduct = new Product();
+        existingProduct.setId(1L);
+
+        Variant existingVariant = new Variant();
+        existingVariant.setColor("Rojo");
+        existingVariant.setSize("M");
+        existingVariant.setProduct(existingProduct);
+
+        when(variantRepository.findByProductIdAndColorAndSizeAndStatus(existingVariant.getProduct().getId(),
+                existingVariant.getColor(), existingVariant.getSize(), EntityStatus.ACTIVE))
+                .thenReturn(Optional.of(existingVariant));
+
+        CreateVariantDTO dto = new CreateVariantDTO();
+        dto.setProductId(1L);
+        dto.setColor("Rojo");
+        dto.setSize("M");
+        
+        Exception exception = assertThrows(APIException.class, () -> {
+            variantService.createVariant(dto);
+        });
+
+        String expectedMessage = "La variante ya existe";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage), "Debería ver un mensaje de error que dice 'Ya existe una variante con el mismo color y tamaño para el producto'");
+
+        verify(variantRepository, never()).save(existingVariant);
     }
 }

@@ -1,4 +1,4 @@
-package grupo11.megastore;
+package grupo11.megastore.tests_unitarios;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
