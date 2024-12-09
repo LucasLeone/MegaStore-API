@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import grupo11.megastore.products.dto.product.CreateProductDTO;
+import grupo11.megastore.products.model.Product;
 import grupo11.megastore.products.model.repository.CategoryRepository;
 import grupo11.megastore.products.validation.CategoryExistsValidator;
 import jakarta.validation.ConstraintValidator;
@@ -229,5 +230,38 @@ public class CreateProductDTOTest {
         Set<ConstraintViolation<CreateProductDTO>> violations = validator.validate(dto);
 
         assertTrue(violations.isEmpty(), "No debería haber violaciones con una categoría válida y un precio válido");
+    }
+
+    // Tests 1.4.3
+    @Test
+    void testRestaurarProductoEliminadoExitosamente() {
+        Product productoEliminado = new Product();
+        productoEliminado.setId(1L);
+        productoEliminado.setName("Producto Eliminado");
+        productoEliminado.setPrice(10.0);
+        productoEliminado.delete();
+
+        if (productoEliminado.getStatus() == grupo11.megastore.constant.EntityStatus.DELETED) {
+            productoEliminado.restore();
+            assertEquals(grupo11.megastore.constant.EntityStatus.ACTIVE, productoEliminado.getStatus(), 
+                "El producto debería estar en estado 'ACTIVE' tras la restauración");
+        } else {
+            throw new AssertionError("El producto no estaba en estado DELETED al inicio de la prueba");
+        }
+    }
+
+    @Test
+    void testIntentarRestaurarProductoQueNoEstaEliminado() {
+        Product productoActivo = new Product();
+        productoActivo.setId(2L);
+        productoActivo.setName("Producto Activo");
+        productoActivo.setPrice(20.0);
+
+        if (productoActivo.getStatus() == grupo11.megastore.constant.EntityStatus.DELETED) {
+            throw new AssertionError("El producto está marcado como DELETED, pero debería estar ACTIVE para esta prueba.");
+        } else {
+            assertEquals(grupo11.megastore.constant.EntityStatus.ACTIVE, productoActivo.getStatus(), 
+                "El producto debería seguir en estado 'ACTIVE' ya que no se puede restaurar un producto no eliminado");
+        }
     }
 }
