@@ -2,13 +2,20 @@ package grupo11.megastore;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import grupo11.megastore.products.dto.product.CreateProductDTO;
+import grupo11.megastore.products.model.repository.CategoryRepository;
+import grupo11.megastore.products.validation.CategoryExistsValidator;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorFactory;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -18,9 +25,40 @@ public class CreateProductDTOTest {
 
     private Validator validator;
 
+    @Mock
+    private CategoryRepository categoryRepository;
+
     @BeforeEach
     void setUp() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        // Inicializa los mocks
+        MockitoAnnotations.openMocks(this);
+
+        // Simula que la categoría 1 existe y la categoría 9999 no existe
+        when(categoryRepository.existsById(1L)).thenReturn(true);
+        when(categoryRepository.existsById(9999L)).thenReturn(false);
+
+        // Configurar una ConstraintValidatorFactory custom
+        ValidatorFactory factory = Validation.byDefaultProvider().configure()
+                .constraintValidatorFactory(new ConstraintValidatorFactory() {
+                    @Override
+                    public <T extends ConstraintValidator<?, ?>> T getInstance(Class<T> key) {
+                        if (key == CategoryExistsValidator.class) {
+                            // Retornamos el validador con el mock inyectado
+                            return (T) new CategoryExistsValidator(categoryRepository);
+                        }
+                        try {
+                            return key.getDeclaredConstructor().newInstance();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    @Override
+                    public void releaseInstance(ConstraintValidator<?, ?> instance) {
+                    }
+                })
+                .buildValidatorFactory();
+
         validator = factory.getValidator();
     }
 
@@ -158,73 +196,38 @@ public class CreateProductDTOTest {
     }
 
     // Tests 1.3.3
-    // @Test
-    // void testCategoriaInexistente() {
-    //     CreateProductDTO dto = new CreateProductDTO();
-    //     dto.setName("Producto Valido");
-    //     dto.setPrice(25.50);
-    //     dto.setCategoryId(9999L);
-    //     dto.setSubcategoryId(1L);
-    //     dto.setBrandId(1L);
+    @Test
+    void testCategoriaInexistenteYPrecioNegativo() {
+        CreateProductDTO dto = new CreateProductDTO();
+        dto.setName("Producto Valido");
+        dto.setPrice(-10.0);
+        dto.setCategoryId(9999L);
+        dto.setSubcategoryId(1L);
+        dto.setBrandId(1L);
 
-    //     Set<ConstraintViolation<CreateProductDTO>> violations = validator.validate(dto);
+        Set<ConstraintViolation<CreateProductDTO>> violations = validator.validate(dto);
 
-    //     assertTrue(!violations.isEmpty(), "Debería haber al menos una violación");
-    //     boolean foundExpectedMessage = violations.stream()
-    //             .anyMatch(v -> v.getMessage().equals("La categoría seleccionada no existe"));
+        assertTrue(!violations.isEmpty(), "Debería haber al menos una violación");
+        boolean foundCategoryMessage = violations.stream()
+                .anyMatch(v -> v.getMessage().equals("La categoría no existe"));
+        assertTrue(foundCategoryMessage, "Debería haberse encontrado el mensaje 'La categoría no existe'");
 
-    //     assertTrue(foundExpectedMessage, "Debería haberse encontrado el mensaje 'La categoría seleccionada no existe");
-    // }
+        boolean foundPriceMessage = violations.stream()
+                .anyMatch(v -> v.getMessage().equals("El precio debe ser positivo"));
+        assertTrue(foundPriceMessage, "Debería haberse encontrado el mensaje 'El precio debe ser positivo'");
+    }
 
-    // @Test
-    // void testPrecioNegativoYCategoriaValida() {
-    //     CreateProductDTO dto = new CreateProductDTO();
-    //     dto.setName("Producto Valido");
-    //     dto.setPrice(-10.0);
-    //     dto.setCategoryId(1L);
-    //     dto.setSubcategoryId(1L);
-    //     dto.setBrandId(1L);
+    @Test
+    void testCategoriaValidaYPrecioValido() {
+        CreateProductDTO dto = new CreateProductDTO();
+        dto.setName("Producto Valido");
+        dto.setPrice(25.50);
+        dto.setCategoryId(1L);
+        dto.setSubcategoryId(1L);
+        dto.setBrandId(1L);
 
-    //     Set<ConstraintViolation<CreateProductDTO>> violations = validator.validate(dto);
+        Set<ConstraintViolation<CreateProductDTO>> violations = validator.validate(dto);
 
-    //     assertTrue(!violations.isEmpty(), "Debería haber una violación si el precio es negativo");
-
-    //     boolean foundExpectedMessage = violations.stream()
-    //             .anyMatch(v -> v.getMessage().equals("El precio debe ser positivo"));
-                
-    //     assertTrue(foundExpectedMessage, "Debería haberse encontrado el mensaje 'El precio debe ser positivo'");
-    // }
-
-    // @Test
-    // void testCategoriaInexistenteYPrecioNegativo() {
-    //     CreateProductDTO dto = new CreateProductDTO();
-    //     dto.setName("Producto Valido");
-    //     dto.setPrice(-10.0);
-    //     dto.setCategoryId(9999L);
-    //     dto.setSubcategoryId(1L);
-    //     dto.setBrandId(1L);
-
-    //     Set<ConstraintViolation<CreateProductDTO>> violations = validator.validate(dto);
-
-    //     assertTrue(!violations.isEmpty(), "Debería haber al menos una violación");
-
-    //     boolean foundExpectedMessage = violations.stream()
-    //             .anyMatch(v -> v.getMessage().equals("La categoría seleccionada no existe"));
-
-    //     assertTrue(foundExpectedMessage, "Debería haberse encontrado el mensaje 'La categoría seleccionada no existe");
-    // }
-
-    // @Test
-    // void testCategoriaValidaYPrecioValido() {
-    //     CreateProductDTO dto = new CreateProductDTO();
-    //     dto.setName("Producto Valido");
-    //     dto.setPrice(25.50);
-    //     dto.setCategoryId(1L);
-    //     dto.setSubcategoryId(1L);
-    //     dto.setBrandId(1L);
-
-    //     Set<ConstraintViolation<CreateProductDTO>> violations = validator.validate(dto);
-
-    //     assertTrue(violations.isEmpty(), "No debería haber violaciones con una categoría válida y un precio válido");
-    // }
+        assertTrue(violations.isEmpty(), "No debería haber violaciones con una categoría válida y un precio válido");
+    }
 }

@@ -142,4 +142,34 @@ public class CreateVariantDTOTest {
 
         assertTrue(violations.isEmpty(), "No debería haber violaciones con un color de 15 caracteres");
     }
+
+    // Tests 1.3.5
+    @Test
+    void testColorVacioYStockVacio() {
+        CreateVariantDTO dto = new CreateVariantDTO();
+        dto.setProductId(1L);
+        dto.setSize("1L");
+        dto.setColor("");
+        dto.setStock(null);
+
+        Set<ConstraintViolation<CreateVariantDTO>> violations = validator.validate(dto);
+
+        assertTrue(!violations.isEmpty(), "Debería haber al menos una violación");
+        boolean foundExpectedMessage = violations.stream()
+                .anyMatch(v -> v.getMessage().equals("El color es obligatorio"));
+
+        assertTrue(foundExpectedMessage, "Debería haberse encontrado el mensaje 'El color es obligatorio'");
+    }
+
+    void testColorValidoYStockValido() {
+        CreateVariantDTO dto = new CreateVariantDTO();
+        dto.setProductId(1L);
+        dto.setSize("1L");
+        dto.setColor("Azul");
+        dto.setStock(10);
+
+        Set<ConstraintViolation<CreateVariantDTO>> violations = validator.validate(dto);
+
+        assertTrue(violations.isEmpty(), "No debería haber violaciones con color y stock válidos");
+    }
 }

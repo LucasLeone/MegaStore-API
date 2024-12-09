@@ -2,6 +2,7 @@ package grupo11.megastore.products.dto.product;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import grupo11.megastore.products.validation.CategoryExists;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotEmpty;
@@ -24,6 +25,7 @@ public class CreateProductDTO {
     private Double price;
 
     @NotNull(message = "La categoría es obligatoria")
+    @CategoryExists(message = "La categoría no existe")
     private Long categoryId;
 
     @NotNull(message = "La subcategoría es obligatoria")
