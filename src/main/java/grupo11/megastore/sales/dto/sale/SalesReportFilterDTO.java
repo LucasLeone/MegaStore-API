@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 public class SalesReportFilterDTO {
-    private String period; // "daily", "weekly", "monthly"
+    private String period; // "daily", "weekly", "monthly", "yearly"
     private Long brand;
     private Long category;
     private Long subcategory;
