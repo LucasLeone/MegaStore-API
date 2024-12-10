@@ -42,7 +42,6 @@ public class SubcategoryIntegracionTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private Long categoryId;
     private Long subcategoryId;
 
     @BeforeEach
@@ -54,7 +53,6 @@ public class SubcategoryIntegracionTest {
         Category category = new Category();
         category.setName("Pantalones");
         Category savedCategory = categoryRepository.save(category);
-        this.categoryId = savedCategory.getId();
 
         // Crear subcategoría
         Subcategory subcategory = new Subcategory();
@@ -64,7 +62,7 @@ public class SubcategoryIntegracionTest {
         this.subcategoryId = savedSubcategory.getId();
     }
 
-    // Test 2.1.3
+    // Tests 2.1.3
     @Test
     void testCrearNombreLongMaxima() throws Exception {
         String nombreMaximo = "NombreDeSubcategoriaDe32Caracter"; // 32 caracteres
@@ -79,7 +77,6 @@ public class SubcategoryIntegracionTest {
                 .andExpect(jsonPath("$.name").value(nombreMaximo));
     }
 
-    // Test 2.1.3
     @Test
     void testCrearNombreLongMaximaMasUno() throws Exception {
         String nombreExcedeMaximo = "NombreDeSubcategoriaDe33Caractere"; // 33 caracteres
@@ -94,7 +91,6 @@ public class SubcategoryIntegracionTest {
                 .andExpect(jsonPath("$.name").value("El nombre debe tener entre 2 y 32 caracteres"));
     }
 
-    // Test 2.1.3
     @Test
     void testCrearNombreLongMaximaMenosUno() throws Exception {
         String nombreMenosUno = "NombreDeSubcategoriaDe31Caracte"; // 31 caracteres

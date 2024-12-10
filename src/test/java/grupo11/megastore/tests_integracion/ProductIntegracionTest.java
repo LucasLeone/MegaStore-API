@@ -1,6 +1,8 @@
 package grupo11.megastore.tests_integracion;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -32,22 +34,22 @@ import jakarta.transaction.Transactional;
 @Import(TestConfig.class)
 @Transactional
 public class ProductIntegracionTest {
-    
+
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ProductRepository productRepository;
-    
+
     @Autowired
     private CategoryRepository categoryRepository;
-    
+
     @Autowired
     private SubcategoryRepository subcategoryRepository;
-    
+
     @Autowired
     private BrandRepository brandRepository;
-    
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -57,16 +59,16 @@ public class ProductIntegracionTest {
         categoryRepository.deleteAll();
         subcategoryRepository.deleteAll();
         brandRepository.deleteAll();
-        
+
         Category category = new Category();
         category.setName("Calzado");
         categoryRepository.save(category);
-        
+
         Subcategory subcategory = new Subcategory();
         subcategory.setName("Deportivo");
         subcategory.setCategory(category);
         subcategoryRepository.save(subcategory);
-        
+
         Brand brand = new Brand();
         brand.setName("Nike");
         brandRepository.save(brand);
@@ -106,4 +108,51 @@ public class ProductIntegracionTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.price").value("El precio debe ser positivo"));
     }
+
+    // Tests 2.2.5
+    @Test
+    void testPrecioPositivo() throws Exception {
+        long countBefore = productRepository.count();
+
+        CreateProductDTO createProductDTO = new CreateProductDTO();
+        createProductDTO.setName("Producto A");
+        createProductDTO.setDescription("Descripción del producto A");
+        createProductDTO.setPrice(100.0);
+        createProductDTO.setCategoryId(categoryRepository.findAll().get(0).getId());
+        createProductDTO.setSubcategoryId(subcategoryRepository.findAll().get(0).getId());
+        createProductDTO.setBrandId(brandRepository.findAll().get(0).getId());
+
+        mockMvc.perform(post("/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createProductDTO)))
+                .andExpect(status().isCreated())
+                .andDo(print())
+                .andExpect(jsonPath("$.price").value(100.0));
+
+        long countAfter = productRepository.count();
+        assertEquals(countBefore + 1, countAfter, "El conteo de productos debería haber incrementado en 1");
+    }
+
+    @Test
+    void testPrecioNegativo() throws Exception {
+        long countBefore = productRepository.count();
+
+        CreateProductDTO createProductDTO = new CreateProductDTO();
+        createProductDTO.setName("Producto A");
+        createProductDTO.setDescription("Descripción del producto A");
+        createProductDTO.setPrice(-100.0);
+        createProductDTO.setCategoryId(categoryRepository.findAll().get(0).getId());
+        createProductDTO.setSubcategoryId(subcategoryRepository.findAll().get(0).getId());
+        createProductDTO.setBrandId(brandRepository.findAll().get(0).getId());
+
+        mockMvc.perform(post("/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createProductDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.price").value("El precio debe ser positivo"));
+
+        long countAfter = productRepository.count();
+        assert (countAfter == countBefore);
+    }
+
 }

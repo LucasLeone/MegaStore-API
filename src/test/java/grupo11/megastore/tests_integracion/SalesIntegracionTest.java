@@ -187,6 +187,7 @@ public class SalesIntegracionTest {
         return saleRepository.save(sale);
     }
 
+    // Tests 2.1.5
     @Test
     @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void testReporteVentas_FechaIgualALimite() throws Exception {

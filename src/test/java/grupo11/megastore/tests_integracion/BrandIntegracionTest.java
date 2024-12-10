@@ -1,6 +1,8 @@
 package grupo11.megastore.tests_integracion;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import grupo11.megastore.config.TestConfig;
 import grupo11.megastore.products.dto.brand.CreateBrandDTO;
+import grupo11.megastore.products.dto.brand.UpdateBrandDTO;
+import grupo11.megastore.products.model.Brand;
 import grupo11.megastore.products.model.repository.BrandRepository;
 import jakarta.transaction.Transactional;
 
@@ -33,9 +37,20 @@ public class BrandIntegracionTest {
     @Autowired
     private BrandRepository brandRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private Brand existingBrand;
+
     @BeforeEach
     void setup() {
         brandRepository.deleteAll();
+
+        // Crear Marca
+        Brand brand = new Brand();
+        brand.setName("TestMarca");
+        brand.setDescription("Test descripcion");
+        this.existingBrand = brandRepository.save(brand);
     }
 
     // Tests 2.1.1
@@ -58,5 +73,64 @@ public class BrandIntegracionTest {
         mockMvc.perform(post("/brands").contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(createBrandDTO)))
                 .andExpect(status().isBadRequest());
+    }
+
+    // Tests 2.2.3
+    @Test
+    void testDescripcionNula() throws Exception {
+        UpdateBrandDTO updateBrandDTO = new UpdateBrandDTO();
+        updateBrandDTO.setName("Marca Actualizada");
+        updateBrandDTO.setDescription("");
+
+        mockMvc.perform(put("/brands/{id}", existingBrand.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateBrandDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Marca Actualizada"))
+                .andExpect(jsonPath("$.description").value(""));
+
+        Brand updatedBrand = brandRepository.findById(existingBrand.getId()).orElseThrow();
+        assert updatedBrand.getName().equals("Marca Actualizada");
+        assert updatedBrand.getDescription() == "";
+    }
+
+    @Test
+    void testDescripcionValida() throws Exception {
+        UpdateBrandDTO updateBrandDTO = new UpdateBrandDTO();
+        updateBrandDTO.setName("Marca Actualizada");
+        updateBrandDTO.setDescription("Descripción de la marca actualizada");
+
+        mockMvc.perform(put("/brands/{id}", existingBrand.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateBrandDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Marca Actualizada"))
+                .andExpect(jsonPath("$.description").value("Descripción de la marca actualizada"));
+
+        Brand updatedBrand = brandRepository.findById(existingBrand.getId()).orElseThrow();
+        assert updatedBrand.getName().equals("Marca Actualizada");
+        assert updatedBrand.getDescription().equals("Descripción de la marca actualizada");
+    }
+
+    @Test
+    void testDescripcionExcedeMaximo() throws Exception {
+        StringBuilder longDescription = new StringBuilder();
+        for (int i = 0; i < 130; i++) {
+            longDescription.append("a");
+        }
+
+        UpdateBrandDTO updateBrandDTO = new UpdateBrandDTO();
+        updateBrandDTO.setName("Marca Actualizada");
+        updateBrandDTO.setDescription(longDescription.toString());
+
+        mockMvc.perform(put("/brands/{id}", existingBrand.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateBrandDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.description").value("La descripción debe tener menos de 128 caracteres"));
+
+        Brand updatedBrand = brandRepository.findById(existingBrand.getId()).orElseThrow();
+        assert updatedBrand.getName().equals("TestMarca");
+        assert updatedBrand.getDescription().equals("Test descripcion");
     }
 }

@@ -131,6 +131,7 @@ public class CartIntegracionTest {
         userRepository.save(user);
     }
 
+    // Tests 2.1.4
     @Test
     @WithMockUser(username = "testuser@example.com", roles = { "USER" })
     void testCantidadIgualAlStock() throws Exception {
