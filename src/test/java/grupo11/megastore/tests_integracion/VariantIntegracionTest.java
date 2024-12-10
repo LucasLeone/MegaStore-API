@@ -131,7 +131,6 @@ public class VariantIntegracionTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createVariantDTO)))
                 .andExpect(status().isBadRequest())
-                .andDo(print())
                 .andExpect(jsonPath("$.message").value("El color y el tamaño no pueden empezar o terminar con espacios"));
     }
 
@@ -147,7 +146,6 @@ public class VariantIntegracionTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createVariantDTO)))
                 .andExpect(status().isBadRequest())
-                .andDo(print())
                 .andExpect(jsonPath("$.message").value("El color y el tamaño no pueden empezar o terminar con espacios"));
     }
 }

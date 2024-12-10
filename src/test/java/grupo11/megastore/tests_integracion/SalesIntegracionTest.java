@@ -11,6 +11,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import grupo11.megastore.config.TestConfig;
 import grupo11.megastore.constant.EntityStatus;
 import grupo11.megastore.products.model.Brand;
@@ -23,6 +25,9 @@ import grupo11.megastore.products.model.repository.CategoryRepository;
 import grupo11.megastore.products.model.repository.ProductRepository;
 import grupo11.megastore.products.model.repository.SubcategoryRepository;
 import grupo11.megastore.products.model.repository.VariantRepository;
+import grupo11.megastore.sales.dto.sale.CreateSaleDTO;
+import grupo11.megastore.sales.dto.sale.ShippingInfoDTO;
+import grupo11.megastore.sales.dto.saleDetail.CreateSaleDetailDTO;
 import grupo11.megastore.sales.model.Sale;
 import grupo11.megastore.sales.model.SaleDetail;
 import grupo11.megastore.sales.model.repository.SaleRepository;
@@ -32,9 +37,13 @@ import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -66,6 +75,9 @@ public class SalesIntegracionTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     public void setup() {
@@ -234,5 +246,121 @@ public class SalesIntegracionTest {
                 .andExpect(jsonPath("$.totalSales").value(0.00))
                 .andExpect(jsonPath("$.topProducts").isEmpty())
                 .andExpect(jsonPath("$.averageOrderValue").value(0.0));
+    }
+
+    private CreateSaleDTO crearVentaDTO(String paymentMethod, String shippingMethod) {
+        CreateSaleDTO createSaleDTO = new CreateSaleDTO();
+        createSaleDTO.setUserId(obtenerIdUsuario());
+        createSaleDTO.setPaymentMethod(paymentMethod);
+        createSaleDTO.setShippingCost(new BigDecimal("10.00"));
+        createSaleDTO.setShippingMethod(shippingMethod);
+
+        CreateSaleDetailDTO detalle = new CreateSaleDetailDTO();
+        detalle.setVariantId(obtenerIdVariante());
+        detalle.setQuantity(1);
+
+        ShippingInfoDTO shippingInfo = new ShippingInfoDTO();
+        shippingInfo.setFullName("Juan Pérez");
+        shippingInfo.setAddress("Calle Falsa 123");
+        shippingInfo.setCity("Buenos Aires");
+        shippingInfo.setState("Buenos Aires");
+        shippingInfo.setPostalCode("C1000AAA");
+        shippingInfo.setCountry("Argentina");
+
+        createSaleDTO.setSaleDetails(Arrays.asList(detalle));
+        createSaleDTO.setShippingInfo(shippingInfo);
+
+        return createSaleDTO;
+    }
+
+    private Long obtenerIdUsuario() {
+        return userRepository.findAll().get(0).getId();
+    }
+
+    private Long obtenerIdVariante() {
+        return variantRepository.findAll().get(0).getId();
+    }
+
+    // Tests 2.3.1
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testMetodoEnvioYPagoValidos() throws Exception {
+        long countBefore = saleRepository.count();
+
+        CreateSaleDTO createSaleDTO = crearVentaDTO("Tarjeta de Crédito", "Envío Exprés");
+
+        mockMvc.perform(post("/sales")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createSaleDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.paymentMethod").value("Tarjeta de Crédito"))
+                .andExpect(jsonPath("$.shippingMethod").value("Envío Exprés"))
+                .andExpect(jsonPath("$.fullName").value("Juan Pérez"))
+                .andExpect(jsonPath("$.address").value("Calle Falsa 123"))
+                .andExpect(jsonPath("$.city").value("Buenos Aires"))
+                .andExpect(jsonPath("$.state").value("Buenos Aires"))
+                .andExpect(jsonPath("$.postalCode").value("C1000AAA"))
+                .andExpect(jsonPath("$.country").value("Argentina"))
+                .andExpect(jsonPath("$.saleDetails").isArray())
+                .andExpect(jsonPath("$.saleDetails[0].variant.id").value(obtenerIdVariante()))
+                .andExpect(jsonPath("$.saleDetails[0].quantity").value(1))
+                .andExpect(jsonPath("$.totalAmount").value(110.00)); // 100 + 10
+
+        long countAfter = saleRepository.count();
+        assertEquals(countBefore + 1, countAfter, "La venta debería haber sido registrada en el sistema");
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testMetodoPagoValidoMetodoEnvioInvalido() throws Exception {
+        long countBefore = saleRepository.count();
+
+        CreateSaleDTO createSaleDTO = crearVentaDTO("Tarjeta de Crédito", null);
+
+        mockMvc.perform(post("/sales")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createSaleDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.shippingMethod").value("El método de envío no puede ser nulo"));
+
+        long countAfter = saleRepository.count();
+        assertEquals(countBefore, countAfter, "La venta no debería haber sido registrada en el sistema");
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testMetodoPagoInvalidoMetodoEnvioValido() throws Exception {
+        long countBefore = saleRepository.count();
+
+        CreateSaleDTO createSaleDTO = crearVentaDTO(null, "Envío Exprés");
+
+        mockMvc.perform(post("/sales")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createSaleDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.paymentMethod").value("El método de pago no puede ser nulo"));
+
+        long countAfter = saleRepository.count();
+        assertEquals(countBefore, countAfter, "La venta no debería haber sido registrada en el sistema");
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testAmbosMetodosInvalido() throws Exception {
+        long countBefore = saleRepository.count();
+
+        CreateSaleDTO createSaleDTO = crearVentaDTO(null, null);
+
+        mockMvc.perform(post("/sales")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createSaleDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.paymentMethod").value("El método de pago no puede ser nulo"))
+                .andExpect(jsonPath("$.shippingMethod").value("El método de envío no puede ser nulo"));
+
+        long countAfter = saleRepository.count();
+        assertEquals(countBefore, countAfter, "La venta no debería haber sido registrada en el sistema");
     }
 }

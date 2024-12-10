@@ -126,7 +126,6 @@ public class ProductIntegracionTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createProductDTO)))
                 .andExpect(status().isCreated())
-                .andDo(print())
                 .andExpect(jsonPath("$.price").value(100.0));
 
         long countAfter = productRepository.count();

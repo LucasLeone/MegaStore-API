@@ -15,13 +15,13 @@ public class CreateSaleDTO {
     @NotNull
     private Long userId;
 
-    @NotNull
+    @NotNull(message = "El método de pago no puede ser nulo")
     private String paymentMethod;
 
     @NotNull
     private BigDecimal shippingCost;
 
-    @NotNull
+    @NotNull(message = "El método de envío no puede ser nulo")
     private String shippingMethod;
 
     @NotEmpty
