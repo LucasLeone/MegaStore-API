@@ -443,4 +443,182 @@ public class SalesIntegracionTest {
         Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
         assertEquals(SaleStatus.COMPLETED, updatedSale.getStatus());
     }
+
+    // Tests 2.4.3
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testMarcarVentaComoEnviadaEnEstadoInProcess() throws Exception {
+        Sale sale = createSale(
+                userRepository.findAll().get(0),
+                LocalDateTime.now(),
+                variantRepository.findAll().get(0),
+                1,
+                new BigDecimal("10.00"),
+                "Envío Estándar",
+                "Carlos Ruiz",
+                "Calle Real 456",
+                "Rosario",
+                "Santa Fe",
+                "S2000",
+                "Argentina");
+        Long saleId = sale.getId();
+
+        mockMvc.perform(post("/sales/" + saleId + "/sent")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SENT"));
+
+        Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
+        assertEquals(SaleStatus.SENT, updatedSale.getStatus());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testIntentarMarcarComoEnviadaVentaYaEnviada() throws Exception {
+        Sale sale = createSale(
+                userRepository.findAll().get(0),
+                LocalDateTime.now(),
+                variantRepository.findAll().get(0),
+                1,
+                new BigDecimal("10.00"),
+                "Envío Estándar",
+                "Ana Gómez",
+                "Avenida Central 789",
+                "La Plata",
+                "Buenos Aires",
+                "B3000",
+                "Argentina");
+        Long saleId = sale.getId();
+        sale.setStatus(SaleStatus.SENT);
+        saleRepository.save(sale);
+
+        mockMvc.perform(post("/sales/" + saleId + "/sent")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        jsonPath("$.message").value("Solo las ventas en proceso pueden ser marcadas como enviadas."));
+
+        Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
+        assertEquals(SaleStatus.SENT, updatedSale.getStatus());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testIntentarMarcarComoEnviadaVentaCancelada() throws Exception {
+        Sale sale = createSale(
+                userRepository.findAll().get(0),
+                LocalDateTime.now(),
+                variantRepository.findAll().get(0),
+                1,
+                new BigDecimal("10.00"),
+                "Envío Estándar",
+                "Luis Martínez",
+                "Boulevard Libertador 101",
+                "Mendoza",
+                "Mendoza",
+                "M4000",
+                "Argentina");
+        Long saleId = sale.getId();
+        sale.setStatus(SaleStatus.CANCELED);
+        saleRepository.save(sale);
+
+        mockMvc.perform(post("/sales/" + saleId + "/sent")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        jsonPath("$.message").value("Solo las ventas en proceso pueden ser marcadas como enviadas."));
+
+        Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
+        assertEquals(SaleStatus.CANCELED, updatedSale.getStatus());
+    }
+
+    // Tests 2.4.4
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testMarcarVentaComoCompletadaEnEstadoSent() throws Exception {
+        Sale sale = createSale(
+                userRepository.findAll().get(0),
+                LocalDateTime.now(),
+                variantRepository.findAll().get(0),
+                1,
+                new BigDecimal("10.00"),
+                "Envío Estándar",
+                "Carlos Ruiz",
+                "Calle Real 456",
+                "Rosario",
+                "Santa Fe",
+                "S2000",
+                "Argentina");
+        sale.setStatus(SaleStatus.SENT);
+        saleRepository.save(sale);
+        Long saleId = sale.getId();
+
+        mockMvc.perform(post("/sales/" + saleId + "/completed")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
+
+        Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
+        assertEquals(SaleStatus.COMPLETED, updatedSale.getStatus());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testIntentarCompletarVentaYaCompletada() throws Exception {
+        Sale sale = createSale(
+                userRepository.findAll().get(0),
+                LocalDateTime.now(),
+                variantRepository.findAll().get(0),
+                1,
+                new BigDecimal("10.00"),
+                "Envío Estándar",
+                "Ana Gómez",
+                "Avenida Central 789",
+                "La Plata",
+                "Buenos Aires",
+                "B3000",
+                "Argentina");
+        sale.setStatus(SaleStatus.COMPLETED);
+        saleRepository.save(sale);
+        Long saleId = sale.getId();
+
+        mockMvc.perform(post("/sales/" + saleId + "/completed")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Solo las ventas enviadas pueden ser marcadas como completadas."));
+
+        Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
+        assertEquals(SaleStatus.COMPLETED, updatedSale.getStatus());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testIntentarCompletarVentaCancelada() throws Exception {
+        Sale sale = createSale(
+                userRepository.findAll().get(0),
+                LocalDateTime.now(),
+                variantRepository.findAll().get(0),
+                1,
+                new BigDecimal("10.00"),
+                "Envío Estándar",
+                "Luis Martínez",
+                "Boulevard Libertador 101",
+                "Mendoza",
+                "Mendoza",
+                "M4000",
+                "Argentina");
+        sale.setStatus(SaleStatus.CANCELED);
+        saleRepository.save(sale);
+        Long saleId = sale.getId();
+
+        mockMvc.perform(post("/sales/" + saleId + "/completed")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Solo las ventas enviadas pueden ser marcadas como completadas."));
+
+        Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
+        assertEquals(SaleStatus.CANCELED, updatedSale.getStatus());
+    }
+
 }
