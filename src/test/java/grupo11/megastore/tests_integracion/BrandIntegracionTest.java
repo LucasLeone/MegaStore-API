@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import grupo11.megastore.config.TestConfig;
+import grupo11.megastore.constant.EntityStatus;
 import grupo11.megastore.products.dto.brand.CreateBrandDTO;
 import grupo11.megastore.products.dto.brand.UpdateBrandDTO;
 import grupo11.megastore.products.model.Brand;
@@ -131,5 +132,46 @@ public class BrandIntegracionTest {
         Brand updatedBrand = brandRepository.findById(existingBrand.getId()).orElseThrow();
         assert updatedBrand.getName().equals("TestMarca");
         assert updatedBrand.getDescription().equals("Test descripcion");
+    }
+
+    // Tests 2.4.1
+    @Test
+    void testRestaurarMarcaEliminadaCorrectamente() throws Exception {
+        Brand deletedBrand = new Brand();
+        deletedBrand.setName("MarcaEliminada");
+        deletedBrand.setDescription("Descripción eliminada");
+        deletedBrand.setStatus(EntityStatus.DELETED);
+        brandRepository.save(deletedBrand);
+        Long deletedBrandId = deletedBrand.getId();
+
+        mockMvc.perform(post("/brands/" + deletedBrandId + "/restore")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        Brand restoredBrand = brandRepository.findById(deletedBrandId).orElseThrow();
+        assert restoredBrand.getStatus() == EntityStatus.ACTIVE;
+    }
+
+    @Test
+    void testRestaurarMarcaYaActiva() throws Exception {
+        Long activeBrandId = existingBrand.getId();
+
+        mockMvc.perform(post("/brands/" + activeBrandId + "/restore")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Marca no encontrado con id: " + activeBrandId));
+
+        Brand activeBrand = brandRepository.findById(activeBrandId).orElseThrow();
+        assert activeBrand.getStatus() == EntityStatus.ACTIVE;
+    }
+
+    @Test
+    void testRestaurarMarcaInexistente() throws Exception {
+        Long nonExistentBrandId = 999L;
+
+        mockMvc.perform(post("/brands/" + nonExistentBrandId + "/restore")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Marca no encontrado con id: " + nonExistentBrandId));
     }
 }

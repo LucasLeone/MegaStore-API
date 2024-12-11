@@ -182,6 +182,10 @@ public class SaleService implements ISaleService {
             throw new APIException("La venta ya se encuentra cancelada.");
         }
 
+        if (sale.getStatus() == SaleStatus.COMPLETED) {
+            throw new APIException("La venta ya se encuentra completada.");
+        }
+
         sale.markAsCanceled();
         Sale updatedSale = saleRepository.save(sale);
 

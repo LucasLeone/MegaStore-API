@@ -1,5 +1,8 @@
 package grupo11.megastore.tests_integracion;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,7 @@ import grupo11.megastore.products.model.repository.CategoryRepository;
 import grupo11.megastore.products.model.repository.ProductRepository;
 import grupo11.megastore.products.model.repository.SubcategoryRepository;
 import grupo11.megastore.products.model.repository.VariantRepository;
+import grupo11.megastore.sales.constant.SaleStatus;
 import grupo11.megastore.sales.dto.sale.CreateSaleDTO;
 import grupo11.megastore.sales.dto.sale.ShippingInfoDTO;
 import grupo11.megastore.sales.dto.saleDetail.CreateSaleDetailDTO;
@@ -41,8 +45,6 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -88,7 +90,6 @@ public class SalesIntegracionTest {
         brandRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Crear Usuario
         User user = new User();
         user.setEmail("admin@example.com");
         user.setPassword("password");
@@ -96,23 +97,19 @@ public class SalesIntegracionTest {
         user.setStatus(EntityStatus.ACTIVE);
         userRepository.save(user);
 
-        // Crear Categoría
         Category category = new Category();
         category.setName("Calzado");
         categoryRepository.save(category);
 
-        // Crear Subcategoría
         Subcategory subcategory = new Subcategory();
         subcategory.setName("Deportivo");
         subcategory.setCategory(category);
         subcategoryRepository.save(subcategory);
 
-        // Crear Marca
         Brand brand = new Brand();
         brand.setName("Nike");
         brandRepository.save(brand);
 
-        // Crear Producto
         Product product = new Product();
         product.setName("Zapatillas");
         product.setBrand(brand);
@@ -121,7 +118,6 @@ public class SalesIntegracionTest {
         product.setPrice(100.00);
         productRepository.save(product);
 
-        // Crear Variante con Stock de 10 unidades
         Variant variant = new Variant();
         variant.setProduct(product);
         variant.setStock(10);
@@ -130,10 +126,9 @@ public class SalesIntegracionTest {
         variant.setStatus(EntityStatus.ACTIVE);
         variantRepository.save(variant);
 
-        // Crear Ventas en fechas específicas
         createSale(
                 user,
-                LocalDateTime.of(2024, 12, 31, 15, 30), // Fecha límite
+                LocalDateTime.of(2024, 12, 31, 15, 30),
                 variant,
                 2,
                 new BigDecimal("10.00"),
@@ -147,7 +142,7 @@ public class SalesIntegracionTest {
 
         createSale(
                 user,
-                LocalDateTime.of(2024, 12, 30, 10, 0), // Fecha anterior a la límite
+                LocalDateTime.of(2024, 12, 30, 10, 0),
                 variant,
                 1,
                 new BigDecimal("5.00"),
@@ -281,7 +276,6 @@ public class SalesIntegracionTest {
     }
 
     // Tests 2.3.1
-
     @Test
     @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void testMetodoEnvioYPagoValidos() throws Exception {
@@ -305,7 +299,7 @@ public class SalesIntegracionTest {
                 .andExpect(jsonPath("$.saleDetails").isArray())
                 .andExpect(jsonPath("$.saleDetails[0].variant.id").value(obtenerIdVariante()))
                 .andExpect(jsonPath("$.saleDetails[0].quantity").value(1))
-                .andExpect(jsonPath("$.totalAmount").value(110.00)); // 100 + 10
+                .andExpect(jsonPath("$.totalAmount").value(110.00));
 
         long countAfter = saleRepository.count();
         assertEquals(countBefore + 1, countAfter, "La venta debería haber sido registrada en el sistema");
@@ -361,5 +355,92 @@ public class SalesIntegracionTest {
 
         long countAfter = saleRepository.count();
         assertEquals(countBefore, countAfter, "La venta no debería haber sido registrada en el sistema");
+    }
+
+    // Tests 2.4.2
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testCancelarVentaEnEstadoInProcess() throws Exception {
+        Sale sale = createSale(
+                userRepository.findAll().get(0),
+                LocalDateTime.now(),
+                variantRepository.findAll().get(0),
+                1,
+                new BigDecimal("10.00"),
+                "Envío Estándar",
+                "Carlos Ruiz",
+                "Calle Real 456",
+                "Rosario",
+                "Santa Fe",
+                "S2000",
+                "Argentina");
+        Long saleId = sale.getId();
+
+        mockMvc.perform(post("/sales/" + saleId + "/canceled")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELED"));
+
+        Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
+        assertEquals(EntityStatus.ACTIVE, updatedSale.getUser().getStatus());
+        assertEquals(SaleStatus.CANCELED, updatedSale.getStatus());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testIntentarCancelarVentaYaCancelada() throws Exception {
+        Sale sale = createSale(
+                userRepository.findAll().get(0),
+                LocalDateTime.now(),
+                variantRepository.findAll().get(0),
+                1,
+                new BigDecimal("10.00"),
+                "Envío Estándar",
+                "Ana Gómez",
+                "Avenida Central 789",
+                "La Plata",
+                "Buenos Aires",
+                "B3000",
+                "Argentina");
+        Long saleId = sale.getId();
+        sale.setStatus(SaleStatus.CANCELED);
+        saleRepository.save(sale);
+
+        mockMvc.perform(post("/sales/" + saleId + "/canceled")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("La venta ya se encuentra cancelada."));
+
+        Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
+        assertEquals(SaleStatus.CANCELED, updatedSale.getStatus());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testIntentarCancelarVentaCompletada() throws Exception {
+        Sale sale = createSale(
+                userRepository.findAll().get(0),
+                LocalDateTime.now(),
+                variantRepository.findAll().get(0),
+                1,
+                new BigDecimal("10.00"),
+                "Envío Estándar",
+                "Luis Martínez",
+                "Boulevard Libertador 101",
+                "Mendoza",
+                "Mendoza",
+                "M4000",
+                "Argentina");
+        Long saleId = sale.getId();
+        sale.setStatus(SaleStatus.COMPLETED);
+        saleRepository.save(sale);
+
+        mockMvc.perform(post("/sales/" + saleId + "/canceled")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("La venta ya se encuentra completada."));
+
+        Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
+        assertEquals(SaleStatus.COMPLETED, updatedSale.getStatus());
     }
 }
