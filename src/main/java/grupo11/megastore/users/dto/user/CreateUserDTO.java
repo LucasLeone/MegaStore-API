@@ -20,11 +20,11 @@ import grupo11.megastore.users.dto.address.CreateAddressDTO;
 public class CreateUserDTO {
 
     @Size(min = 2, max = 20, message = "El nombre debe tener entre 2 y 20 caracteres")
-    @Pattern(regexp = "^[a-zA-Z ]*$", message = "El nombre solo puede contener letras")
+    @Pattern(regexp = "^[a-zA-ZÁÉÍÓÚáéíóúÑñ ]*$", message = "El nombre solo puede contener letras")
     private String firstName;
 
     @Size(min = 2, max = 20, message = "El apellido debe tener entre 2 y 20 caracteres")
-    @Pattern(regexp = "^[a-zA-Z ]*$", message = "El apellido solo puede contener letras")
+    @Pattern(regexp = "^[a-zA-ZÁÉÍÓÚáéíóúÑñ ]*$", message = "El apellido solo puede contener letras")
     private String lastName;
 
     @Email(message = "El email debe ser válido")

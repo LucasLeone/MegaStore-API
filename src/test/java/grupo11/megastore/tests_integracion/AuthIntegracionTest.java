@@ -21,8 +21,10 @@ import jakarta.transaction.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import grupo11.megastore.users.dto.user.LoginCredentials;
+import grupo11.megastore.users.dto.user.RegisterUserDTO;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -89,5 +91,123 @@ public class AuthIntegracionTest {
                 .andExpect(jsonPath("$.email").value("El email debe ser válido"))
                 .andExpect(jsonPath("$.jwt-token").doesNotExist())
                 .andExpect(jsonPath("$.user").doesNotExist());
+    }
+
+    // Tests 2.3.2
+    @Test
+    void testMailYContrasenaValidos() throws Exception {
+        RegisterUserDTO registerUser = new RegisterUserDTO();
+        registerUser.setFirstName("Juan");
+        registerUser.setLastName("Pérez");
+        registerUser.setEmail("juan.perez@email.com");
+        registerUser.setPhoneNumber("123456789");
+        registerUser.setPassword("Contraseña123");
+        registerUser.setPasswordConfirmation("Contraseña123");
+
+        String jsonRequest = objectMapper.writeValueAsString(registerUser);
+
+        long countBefore = userRepository.count();
+
+        mockMvc.perform(post("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value("Usuario registrado con éxito"));
+
+        long countAfter = userRepository.count();
+        assert(countAfter == countBefore + 1);
+
+        boolean userExists = userRepository.findByEmailAndStatus("juan.perez@email.com", EntityStatus.ACTIVE)
+                .isPresent();
+        assert(userExists);
+    }
+
+    @Test
+    void testMailValidoYContrasenaInvalida() throws Exception {
+        RegisterUserDTO registerUser = new RegisterUserDTO();
+        registerUser.setFirstName("Juan");
+        registerUser.setLastName("Pérez");
+        registerUser.setEmail("juan.perez2@email.com");
+        registerUser.setPhoneNumber("987654321");
+        registerUser.setPassword("123");
+        registerUser.setPasswordConfirmation("123");
+
+        String jsonRequest = objectMapper.writeValueAsString(registerUser);
+
+        long countBefore = userRepository.count();
+
+        mockMvc.perform(post("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.password").value("La contraseña debe tener entre 8 y 20 caracteres"));
+
+        long countAfter = userRepository.count();
+        assert(countAfter == countBefore);
+
+        boolean userExists = userRepository.findByEmailAndStatus("juan.perez2@email.com", EntityStatus.ACTIVE)
+                .isPresent();
+        assert(!userExists);
+    }
+
+    @Test
+    void testMailInvalidoYContrasenaValida() throws Exception {
+        RegisterUserDTO registerUser = new RegisterUserDTO();
+        registerUser.setFirstName("Juan");
+        registerUser.setLastName("Pérez");
+        registerUser.setEmail("juan.perez@email");
+        registerUser.setPhoneNumber("123456789");
+        registerUser.setPassword("Contraseña123");
+        registerUser.setPasswordConfirmation("Contraseña123");
+
+        String jsonRequest = objectMapper.writeValueAsString(registerUser);
+
+        long countBefore = userRepository.count();
+
+        mockMvc.perform(post("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.email").value("El email debe ser válido"));
+
+        long countAfter = userRepository.count();
+        assert(countAfter == countBefore);
+
+        boolean userExists = userRepository.findByEmailAndStatus("juan.perez@email", EntityStatus.ACTIVE)
+                .isPresent();
+        assert(!userExists);
+    }
+
+    @Test
+    void testMailYContrasenaInvalido() throws Exception {
+        RegisterUserDTO registerUser = new RegisterUserDTO();
+        registerUser.setFirstName("Juan");
+        registerUser.setLastName("Pérez");
+        registerUser.setEmail("juan.perez@email");
+        registerUser.setPhoneNumber("123456789");
+        registerUser.setPassword("123");
+        registerUser.setPasswordConfirmation("123");
+
+        String jsonRequest = objectMapper.writeValueAsString(registerUser);
+
+        long countBefore = userRepository.count();
+
+        mockMvc.perform(post("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.email").value("El email debe ser válido"))
+                .andExpect(jsonPath("$.password").value("La contraseña debe tener entre 8 y 20 caracteres"));
+
+        long countAfter = userRepository.count();
+        assert(countAfter == countBefore);
+
+        boolean userExists = userRepository.findByEmailAndStatus("juan.perez@email", EntityStatus.ACTIVE)
+                .isPresent();
+        assert(!userExists);
     }
 }
