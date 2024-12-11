@@ -21,7 +21,6 @@ import jakarta.transaction.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import grupo11.megastore.users.dto.user.LoginCredentials;
 import grupo11.megastore.users.dto.user.RegisterUserDTO;

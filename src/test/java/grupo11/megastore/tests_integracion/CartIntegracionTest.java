@@ -1,5 +1,6 @@
 package grupo11.megastore.tests_integracion;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -80,23 +81,19 @@ public class CartIntegracionTest {
         brandRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Crear Categoría
         Category category = new Category();
         category.setName("Calzado");
         categoryRepository.save(category);
 
-        // Crear Subcategoría
         Subcategory subcategory = new Subcategory();
         subcategory.setName("Deportivo");
         subcategory.setCategory(category);
         subcategoryRepository.save(subcategory);
 
-        // Crear Marca
         Brand brand = new Brand();
         brand.setName("Nike");
         brandRepository.save(brand);
 
-        // Crear Producto
         Product product = new Product();
         product.setName("Zapatillas");
         product.setBrand(brand);
@@ -105,7 +102,6 @@ public class CartIntegracionTest {
         product.setPrice(100.0);
         productRepository.save(product);
 
-        // Crear Variante con Stock de 10 unidades
         Variant variant = new Variant();
         variant.setProduct(product);
         variant.setStock(10);
@@ -115,7 +111,6 @@ public class CartIntegracionTest {
         variantRepository.save(variant);
         this.variantId = variant.getId();
 
-        // Crear Usuario
         User user = new User();
         user.setEmail("testuser@example.com");
         user.setPassword("password");
@@ -123,7 +118,6 @@ public class CartIntegracionTest {
         user.setStatus(EntityStatus.ACTIVE);
         userRepository.save(user);
 
-        // Asignar Carrito al Usuario
         Cart cart = new Cart();
         cart.setUser(user);
         cartRepository.save(cart);
@@ -174,5 +168,57 @@ public class CartIntegracionTest {
                 .andExpect(jsonPath("$.cartItems[0].variant.id").value(variantIdToAdd))
                 .andExpect(jsonPath("$.cartItems[0].quantity").value(quantity))
                 .andExpect(jsonPath("$.total").value(100.0 * quantity));
+    }
+
+    // 2.3.5
+    @Test
+    @WithMockUser(username = "testuser@example.com", roles = { "USER" })
+    void testAnadirVarianteExistenteStockSuficiente() throws Exception {
+        Long variantIdToAdd = this.variantId;
+        Integer quantity = 3;
+
+        mockMvc.perform(post("/carts/items/" + variantIdToAdd + "/quantity/" + quantity)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cartItems").isArray())
+                .andExpect(jsonPath("$.cartItems[0].variant.id").value(variantIdToAdd))
+                .andExpect(jsonPath("$.cartItems[0].quantity").value(quantity))
+                .andExpect(jsonPath("$.total").value(100.0 * quantity));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com", roles = { "USER" })
+    void testAnadirVarianteExistenteStockInsuficiente() throws Exception {
+        Long variantIdToAdd = this.variantId;
+        Integer quantity = 11;
+
+        mockMvc.perform(post("/carts/items/" + variantIdToAdd + "/quantity/" + quantity)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Por favor, realiza un pedido de la variante " + variantId + " menor o igual a la cantidad 10."));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com", roles = { "USER" })
+    void testAnadirVarianteNoExistenteStockSuficiente() throws Exception {
+        Long variantIdToAdd = 999L;
+        Integer quantity = 3;
+
+        mockMvc.perform(post("/carts/items/" + variantIdToAdd + "/quantity/" + quantity)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Variante no encontrado con variantId: " + 999L));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com", roles = { "USER" })
+    void testAnadirVarianteNoExistenteStockInsuficiente() throws Exception {
+        Long variantIdToAdd = 999L;
+        Integer quantity = 10;
+
+        mockMvc.perform(post("/carts/items/" + variantIdToAdd + "/quantity/" + quantity)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Variante no encontrado con variantId: " + 999L));
     }
 }
