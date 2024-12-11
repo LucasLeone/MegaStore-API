@@ -586,7 +586,8 @@ public class SalesIntegracionTest {
         mockMvc.perform(post("/sales/" + saleId + "/completed")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Solo las ventas enviadas pueden ser marcadas como completadas."));
+                .andExpect(
+                        jsonPath("$.message").value("Solo las ventas enviadas pueden ser marcadas como completadas."));
 
         Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
         assertEquals(SaleStatus.COMPLETED, updatedSale.getStatus());
@@ -615,10 +616,28 @@ public class SalesIntegracionTest {
         mockMvc.perform(post("/sales/" + saleId + "/completed")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Solo las ventas enviadas pueden ser marcadas como completadas."));
+                .andExpect(
+                        jsonPath("$.message").value("Solo las ventas enviadas pueden ser marcadas como completadas."));
 
         Sale updatedSale = saleRepository.findById(saleId).orElseThrow();
         assertEquals(SaleStatus.CANCELED, updatedSale.getStatus());
     }
 
+    // Tests 2.5.4
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testGenerarReporteVentasConRangoDeFechasValido() throws Exception {
+        String startDate = "2024-01-01";
+        String endDate = "2024-12-31";
+
+        mockMvc.perform(get("/sales/reports")
+                .param("startDate", startDate)
+                .param("endDate", endDate)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalOrders").value(2))
+                .andExpect(jsonPath("$.totalSales").value(315.00))
+                .andExpect(jsonPath("$.topProducts.Zapatillas").value(3))
+                .andExpect(jsonPath("$.averageOrderValue").value(157.50));
+    }
 }

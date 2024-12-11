@@ -194,7 +194,8 @@ public class CartIntegracionTest {
         mockMvc.perform(post("/carts/items/" + variantIdToAdd + "/quantity/" + quantity)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Por favor, realiza un pedido de la variante " + variantId + " menor o igual a la cantidad 10."));
+                .andExpect(jsonPath("$.message").value("Por favor, realiza un pedido de la variante " + variantId
+                        + " menor o igual a la cantidad 10."));
     }
 
     @Test
@@ -219,5 +220,30 @@ public class CartIntegracionTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Variante no encontrado con variantId: " + 999L));
+    }
+
+    // Tests 2.5.5
+    @Test
+    @WithMockUser(username = "testuser@example.com", roles = { "USER" })
+    void testAnadirProductoConCantidadCero() throws Exception {
+        Long variantIdToAdd = this.variantId;
+        Integer quantity = 0;
+
+        mockMvc.perform(post("/carts/items/" + variantIdToAdd + "/quantity/" + quantity)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("La cantidad debe ser un número positivo."));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com", roles = { "USER" })
+    void testAnadirProductoConCantidadNegativa() throws Exception {
+        Long variantIdToAdd = this.variantId;
+        Integer quantity = -2;
+
+        mockMvc.perform(post("/carts/items/" + variantIdToAdd + "/quantity/" + quantity)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("La cantidad debe ser un número positivo."));
     }
 }

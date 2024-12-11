@@ -1,7 +1,9 @@
 package grupo11.megastore.tests_integracion;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import grupo11.megastore.config.TestConfig;
 import grupo11.megastore.constant.EntityStatus;
+import grupo11.megastore.exception.ResourceNotFoundException;
 import grupo11.megastore.products.dto.brand.CreateBrandDTO;
 import grupo11.megastore.products.dto.brand.UpdateBrandDTO;
 import grupo11.megastore.products.model.Brand;
@@ -174,4 +178,59 @@ public class BrandIntegracionTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Marca no encontrado con id: " + nonExistentBrandId));
     }
+
+    // Tests 2.5.1
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testIntentarCrearMarcaConNombreDuplicado() throws Exception {
+        Brand existingBrand = new Brand();
+        existingBrand.setName("Electrónica");
+        existingBrand.setDescription("Categoría de productos electrónicos");
+        existingBrand.setStatus(EntityStatus.ACTIVE);
+        brandRepository.save(existingBrand);
+
+        long brandCountBefore = brandRepository.count();
+
+        CreateBrandDTO createBrandDTO = new CreateBrandDTO();
+        createBrandDTO.setName("Electrónica");
+        createBrandDTO.setDescription("Otra descripción");
+
+        mockMvc.perform(post("/brands")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createBrandDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("La marca ya existe"));
+
+        long brandCount = brandRepository.count();
+        assertEquals(brandCountBefore, brandCount, "No se debe haber creado una marca duplicada");
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    public void testCrearMarcaConNombreUnico() throws Exception {
+        boolean exists = brandRepository.findByNameIgnoreCaseAndStatus("Deportes Extremos", EntityStatus.ACTIVE)
+                .isPresent();
+        assertEquals(false, exists, "No debe existir una marca con el nombre 'Deportes Extremos'");
+
+        CreateBrandDTO createBrandDTO = new CreateBrandDTO();
+        createBrandDTO.setName("Deportes Extremos");
+        createBrandDTO.setDescription("Categoría de deportes extremos");
+
+        mockMvc.perform(post("/brands")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createBrandDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Deportes Extremos"))
+                .andExpect(jsonPath("$.description").value("Categoría de deportes extremos"));
+
+        long brandCount = brandRepository.count();
+        assertEquals(2, brandCount, "La marca 'Deportes Extremos' debería haber sido creada");
+
+        Brand createdBrand = brandRepository.findByNameIgnoreCaseAndStatus("Deportes Extremos", EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Marca", "name", "Deportes Extremos"));
+        assertEquals("Deportes Extremos", createdBrand.getName());
+        assertEquals("Categoría de deportes extremos", createdBrand.getDescription());
+        assertEquals(EntityStatus.ACTIVE, createdBrand.getStatus(), "El estado de la marca debería ser ACTIVE");
+    }
+
 }

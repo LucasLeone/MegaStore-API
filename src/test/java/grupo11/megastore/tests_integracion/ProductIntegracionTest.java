@@ -1,6 +1,7 @@
 package grupo11.megastore.tests_integracion;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -28,6 +29,8 @@ import grupo11.megastore.products.model.repository.BrandRepository;
 import grupo11.megastore.products.model.repository.CategoryRepository;
 import grupo11.megastore.products.model.repository.ProductRepository;
 import grupo11.megastore.products.model.repository.SubcategoryRepository;
+import grupo11.megastore.constant.EntityStatus;
+
 import jakarta.transaction.Transactional;
 
 @SpringBootTest
@@ -174,7 +177,7 @@ public class ProductIntegracionTest {
                 .andExpect(jsonPath("$.price").value("El precio debe ser positivo"));
 
         long countAfter = productRepository.count();
-        assert (countAfter == countBefore);
+        assertEquals(countAfter, countBefore, "No se debe haber creado un producto con precio negativo");
     }
 
     // Tests 2.3.3
@@ -306,7 +309,7 @@ public class ProductIntegracionTest {
     }
 
     @Test
-    void testActualizarConCategoriaMarcaInvalidaYSubcategoriaValida() throws Exception {
+    void testActualizarConMarcaCategoriaInvalidaYSubcategoriaValida() throws Exception {
         UpdateProductDTO updateProduct = new UpdateProductDTO();
         updateProduct.setName("Producto Actualizado");
         updateProduct.setDescription("Descripción actualizada del producto");
@@ -341,5 +344,84 @@ public class ProductIntegracionTest {
                 .content(jsonRequest))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Categoría no encontrado con id: " + invalidCategoryId));
+    }
+
+    // Tests 2.5.2
+    @Test
+    public void testFiltrarProductosPorCategoriaInexistente() throws Exception {
+        Long inexistenteCategoryId = 9999L;
+
+        boolean exists = categoryRepository.findById(inexistenteCategoryId).isPresent();
+        assertEquals(false, exists, "No debe existir una categoría con ID: " + inexistenteCategoryId);
+
+        mockMvc.perform(get("/products")
+                .param("categoryId", String.valueOf(inexistenteCategoryId))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    public void testFiltrarProductosPorCategoriaSinProductos() throws Exception {
+        Category categoriaSinProductos = new Category();
+        categoriaSinProductos.setName("Categoría Sin Productos");
+        categoriaSinProductos = categoryRepository.save(categoriaSinProductos);
+        Long categoriaSinProductosId = categoriaSinProductos.getId();
+
+        long productosCount = productRepository.findByBrandIdAndStatus(categoriaSinProductosId, EntityStatus.ACTIVE)
+                .size();
+        assertEquals(0, productosCount, "La categoría debe no tener productos asociados");
+
+        mockMvc.perform(get("/products")
+                .param("categoryId", String.valueOf(categoriaSinProductosId))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    public void testFiltrarProductosPorCategoriaConProductos() throws Exception {
+        Category categoriaConProductos = new Category();
+        categoriaConProductos.setName("Categoría Con Productos");
+        categoriaConProductos = categoryRepository.save(categoriaConProductos);
+        Long categoriaConProductosId = categoriaConProductos.getId();
+
+        Subcategory subcategory = new Subcategory();
+        subcategory.setName("Subcategoría Deportiva");
+        subcategory.setCategory(categoriaConProductos);
+        subcategory = subcategoryRepository.save(subcategory);
+
+        Brand brand = new Brand();
+        brand.setName("Adidas");
+        brand = brandRepository.save(brand);
+
+        Product producto1 = new Product();
+        producto1.setName("Producto 1");
+        producto1.setDescription("Descripción del Producto 1");
+        producto1.setPrice(50.0);
+        producto1.setCategory(categoriaConProductos);
+        producto1.setSubcategory(subcategory);
+        producto1.setBrand(brand);
+        productRepository.save(producto1);
+
+        Product producto2 = new Product();
+        producto2.setName("Producto 2");
+        producto2.setDescription("Descripción del Producto 2");
+        producto2.setPrice(75.0);
+        producto2.setCategory(categoriaConProductos);
+        producto2.setSubcategory(subcategory);
+        producto2.setBrand(brand);
+        productRepository.save(producto2);
+
+        mockMvc.perform(get("/products")
+                .param("categoryId", String.valueOf(categoriaConProductosId))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].name").value("Producto 1"))
+                .andExpect(jsonPath("$[1].name").value("Producto 2"));
     }
 }
