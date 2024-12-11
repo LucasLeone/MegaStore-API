@@ -1,5 +1,6 @@
 package grupo11.megastore.tests_integracion;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -59,6 +60,8 @@ public class VariantIntegracionTest {
     private ObjectMapper objectMapper;
 
     private Product existingProduct;
+    private Long validProductId;
+    private final Long invalidProductId = 999L;
 
     @BeforeEach
     void setup() {
@@ -99,6 +102,7 @@ public class VariantIntegracionTest {
         product.setPrice(100.0);
         product.setStatus(EntityStatus.ACTIVE);
         existingProduct = productRepository.save(product);
+        validProductId = existingProduct.getId();
     }
 
     // Tests 2.2.4
@@ -131,7 +135,8 @@ public class VariantIntegracionTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createVariantDTO)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("El color y el tamaño no pueden empezar o terminar con espacios"));
+                .andExpect(
+                        jsonPath("$.message").value("El color y el tamaño no pueden empezar o terminar con espacios"));
     }
 
     @Test
@@ -146,6 +151,156 @@ public class VariantIntegracionTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createVariantDTO)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("El color y el tamaño no pueden empezar o terminar con espacios"));
+                .andExpect(
+                        jsonPath("$.message").value("El color y el tamaño no pueden empezar o terminar con espacios"));
+    }
+
+    // Tests 2.3.4
+    @Test
+    void testCrearVarianteProductoColorTamanoValidos() throws Exception {
+        CreateVariantDTO createVariantDTO = new CreateVariantDTO();
+        createVariantDTO.setProductId(validProductId);
+        createVariantDTO.setColor("Rojo");
+        createVariantDTO.setSize("M");
+        createVariantDTO.setStock(50);
+
+        mockMvc.perform(post("/variants")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createVariantDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.color").value("Rojo"))
+                .andExpect(jsonPath("$.size").value("M"))
+                .andExpect(jsonPath("$.stock").value(50));
+
+        long countAfter = variantRepository.count();
+        assertEquals(1, countAfter, "La variante debería estar registrada en el sistema");
+    }
+
+    @Test
+    void testCrearVarianteProductoColorValidosYTamanoInvalido() throws Exception {
+        CreateVariantDTO createVariantDTO = new CreateVariantDTO();
+        createVariantDTO.setProductId(validProductId);
+        createVariantDTO.setColor("Rojo");
+        createVariantDTO.setSize("Extra grande");
+        createVariantDTO.setStock(50);
+
+        mockMvc.perform(post("/variants")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createVariantDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.size").value("El talle debe tener entre 1 y 10 caracteres"));
+
+        long countAfter = variantRepository.count();
+        assertEquals(0, countAfter, "La variante no debería estar registrada en el sistema");
+    }
+
+    @Test
+    void testCrearVarianteProductoTamanoValidoYColorInvalido() throws Exception {
+        CreateVariantDTO createVariantDTO = new CreateVariantDTO();
+        createVariantDTO.setProductId(validProductId);
+        createVariantDTO.setColor("");
+        createVariantDTO.setSize("M");
+        createVariantDTO.setStock(50);
+
+        mockMvc.perform(post("/variants")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createVariantDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.color").value("El color es obligatorio"));
+
+        long countAfter = variantRepository.count();
+        assertEquals(0, countAfter, "La variante no debería estar registrada en el sistema");
+    }
+
+    @Test
+    void testCrearVarianteProductoValidoYColorTamanoInvalidos() throws Exception {
+        CreateVariantDTO createVariantDTO = new CreateVariantDTO();
+        createVariantDTO.setProductId(validProductId);
+        createVariantDTO.setColor("");
+        createVariantDTO.setSize("Extra grande");
+        createVariantDTO.setStock(50);
+
+        mockMvc.perform(post("/variants")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createVariantDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.color").value("El color es obligatorio"))
+                .andExpect(jsonPath("$.size").value("El talle debe tener entre 1 y 10 caracteres"));
+
+        long countAfter = variantRepository.count();
+        assertEquals(0, countAfter, "La variante no debería estar registrada en el sistema");
+    }
+
+    @Test
+    void testCrearVarianteProductoInvalidoColorTamañoValidos() throws Exception {
+        CreateVariantDTO createVariantDTO = new CreateVariantDTO();
+        createVariantDTO.setProductId(invalidProductId);
+        createVariantDTO.setColor("Rojo");
+        createVariantDTO.setSize("XXL");
+        createVariantDTO.setStock(50);
+
+        mockMvc.perform(post("/variants")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createVariantDTO)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Producto no encontrado con id: " + invalidProductId));
+
+        long countAfter = variantRepository.count();
+        assertEquals(0, countAfter, "La variante no debería estar registrada en el sistema");
+    }
+
+    @Test
+    void testCrearVarianteProductoTamanoInvalidoYColorValido() throws Exception {
+        CreateVariantDTO createVariantDTO = new CreateVariantDTO();
+        createVariantDTO.setProductId(invalidProductId);
+        createVariantDTO.setColor("Rojo");
+        createVariantDTO.setSize("Extra grande");
+        createVariantDTO.setStock(50);
+
+        mockMvc.perform(post("/variants")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createVariantDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.size").value("El talle debe tener entre 1 y 10 caracteres"));
+
+        long countAfter = variantRepository.count();
+        assertEquals(0, countAfter, "La variante no debería estar registrada en el sistema");
+    }
+
+    @Test
+    void testCrearVarianteProductoInvalidoColorInvalidoTamañoValido() throws Exception {
+        CreateVariantDTO createVariantDTO = new CreateVariantDTO();
+        createVariantDTO.setProductId(invalidProductId);
+        createVariantDTO.setColor("");
+        createVariantDTO.setSize("M");
+        createVariantDTO.setStock(50);
+
+        mockMvc.perform(post("/variants")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createVariantDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.color").value("El color es obligatorio"));
+
+        long countAfter = variantRepository.count();
+        assertEquals(0, countAfter, "La variante no debería estar registrada en el sistema");
+    }
+
+    @Test
+    void testCrearVarianteProductoColorTamanoInvalidos() throws Exception {
+        CreateVariantDTO createVariantDTO = new CreateVariantDTO();
+        createVariantDTO.setProductId(invalidProductId);
+        createVariantDTO.setColor("");
+        createVariantDTO.setSize("Extra grande");
+        createVariantDTO.setStock(50);
+
+        mockMvc.perform(post("/variants")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createVariantDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.color").value("El color es obligatorio"))
+                .andExpect(jsonPath("$.size").value("El talle debe tener entre 1 y 10 caracteres"));
+
+        long countAfter = variantRepository.count();
+        assertEquals(0, countAfter, "La variante no debería estar registrada en el sistema");
     }
 }

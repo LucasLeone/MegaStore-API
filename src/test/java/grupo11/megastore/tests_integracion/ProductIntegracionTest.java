@@ -265,7 +265,6 @@ public class ProductIntegracionTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest))
                 .andExpect(status().isNotFound())
-                .andDo(print())
                 .andExpect(jsonPath("$.message").value("Categoría no encontrado con id: " + invalidCategoryId));
     }
 
