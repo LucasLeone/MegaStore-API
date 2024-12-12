@@ -90,4 +90,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      * @return       Una lista de productos que contienen la cadena especificada en su nombre y que coinciden con el estado.
      */
     List<Product> findByNameContainingAndStatus(String name, EntityStatus status);
+
+    Optional<Product> findByNameIgnoreCaseAndCategoryIdAndSubcategoryIdAndBrandIdAndStatus(String name, Long categoryId, Long subcategoryId, Long brandId, EntityStatus status);
 }

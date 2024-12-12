@@ -87,12 +87,16 @@ public class ProductService implements IProductService {
             throw new APIException("El nombre del producto no puede empezar o terminar con espacios");
         }
 
-        this.productRepository.findByNameIgnoreCaseAndStatus(product.getName(), EntityStatus.ACTIVE)
+        this.productRepository
+                .findByNameIgnoreCaseAndCategoryIdAndSubcategoryIdAndBrandIdAndStatus(product.getName(),
+                        product.getCategoryId(), product.getSubcategoryId(), product.getBrandId(), EntityStatus.ACTIVE)
                 .ifPresent(existingProduct -> {
                     throw new APIException("El producto ya existe");
                 });
 
-        this.productRepository.findByNameIgnoreCaseAndStatus(product.getName(), EntityStatus.DELETED)
+        this.productRepository
+                .findByNameIgnoreCaseAndCategoryIdAndSubcategoryIdAndBrandIdAndStatus(product.getName(),
+                        product.getCategoryId(), product.getSubcategoryId(), product.getBrandId(), EntityStatus.DELETED)
                 .ifPresent(existingProduct -> {
                     throw new APIException("El producto ya existe pero esta eliminado");
                 });
